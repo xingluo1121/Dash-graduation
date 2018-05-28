@@ -57,7 +57,8 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
   }
   // buffer control
   int64_t bufferNow = m_bufferData.bufferLevelNew.back() -
-                      (timeNow - m_throughput.transmissionEnd.back());
+                      (timeNow - m_throughput.transmissionEnd.back()) -
+                      m_videoData.segmentDuration / 2;
 
   if (segmentCounter < 3) {
     answer.nextRepIndex = 0;

@@ -33,7 +33,8 @@ algorithmReply constbitrateAlgorithm::GetNextRep(const int64_t segmentCounter,
     int64_t lowerBound = m_targetBuffer - m_deltaBuffer;
     int64_t upperBound = m_targetBuffer + m_deltaBuffer;
     int64_t bufferNow = m_bufferData.bufferLevelNew.back() -
-                        (timeNow - m_throughput.transmissionEnd.back());
+                        (timeNow - m_throughput.transmissionEnd.back()) -
+                        m_videoData.segmentDuration / 2;
     // buffer control
     int64_t randBuf =
         lowerBound + (int64_t)(std::rand() % (upperBound - (lowerBound) + 1));

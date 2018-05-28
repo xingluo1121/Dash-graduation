@@ -10,10 +10,10 @@ TomatoAlgorithm::TomatoAlgorithm(const videoData &videoData,
                                  const bufferData &bufferData,
                                  const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_lastRepIndex(0),       // last Bitrate Level
-      m_targetBuffer(6000000), // 6s
-      m_deltaBuffer(1000000),  // 1s
-      m_bufferMin(3000000),    // 3s
+      m_lastRepIndex(0),        // last Bitrate Level
+      m_targetBuffer(10000000), // 10s
+      m_deltaBuffer(2000000),   // 2s
+      m_bufferMin(4000000),     // 4s
       m_expBuffer(0), // buffer expection ,cal at the beginning of download the
                       // current seg
       m_multipleTinyDrop(0), // cal tiny buffer drop
@@ -37,9 +37,10 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
   int64_t bufferNow = 0;
   if (segmentCounter != 0) {
     bufferNow = m_bufferData.bufferLevelNew.back() -
-                (timeNow - m_throughput.transmissionEnd.back());
+                (timeNow - m_throughput.transmissionEnd.back()) -
+                m_videoData.segmentDuration / 2;
     double alpha =
-        bufferNow > m_targetBuffer ? 1.0 : (bufferNow / m_targetBuffer);
+        bufferNow > m_targetBuffer ? 0.95 : (bufferNow / m_targetBuffer) * 0.95;
     if (bufferNow <= m_bufferMin) {
       answer.nextRepIndex = 0;
       answer.decisionCase = 1;

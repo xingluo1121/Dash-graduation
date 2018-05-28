@@ -32,7 +32,8 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
   int64_t bufferNow = 0;
   if (segmentCounter != 0) {
     bufferNow = m_bufferData.bufferLevelNew.back() -
-                (timeNow - m_throughput.transmissionEnd.back());
+                (timeNow - m_throughput.transmissionEnd.back()) -
+                m_videoData.segmentDuration / 2;
     if (bufferNow <= m_bufferMin) {
       answer.nextRepIndex = 0;
       answer.decisionCase = 1;

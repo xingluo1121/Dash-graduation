@@ -56,7 +56,8 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
   if (segmentCounter != 0) {
     nextRepIndex = m_lastRepIndex;
     bufferNow = m_bufferData.bufferLevelNew.back() -
-                (timeNow - m_throughput.transmissionEnd.back());
+                (timeNow - m_throughput.transmissionEnd.back()) -
+                m_videoData.segmentDuration / 2;
 
     int64_t nextHighestRepBitrate;
     if (m_lastRepIndex != m_highestRepIndex)
