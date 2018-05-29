@@ -12,7 +12,7 @@ constbitrateAlgorithm::constbitrateAlgorithm(const videoData &videoData,
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
       m_constRepIndex(4),       // fixed repindex
       m_targetBuffer(10000000), // 10s
-      m_deltaBuffer(2000000),   // 2s
+      m_deltaBuffer(1000000),   // 1s
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,

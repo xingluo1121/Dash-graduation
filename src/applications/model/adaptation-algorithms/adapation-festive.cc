@@ -29,11 +29,11 @@ FestiveAlgorithm::FestiveAlgorithm(const videoData &videoData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
       m_targetBuffer(10000000), // 10s
-      m_delta(2000000),         // 2s
+      m_delta(1000000),         // 1s
       m_alpha(12.0), m_highestRepIndex(videoData.averageBitrate[0].size() - 1),
-      m_thrptThrsh(0.90) {
+      m_thrptThrsh(0.95) {
   NS_LOG_INFO(this);
-  m_smooth.push_back(3); // after how many steps switch up is possible
+  m_smooth.push_back(5); // after how many steps switch up is possible
   m_smooth.push_back(1); // switch up by how many representatations at once
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
                 "The highest quality representation index should be => 0");
@@ -57,8 +57,7 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
   }
   // buffer control
   int64_t bufferNow = m_bufferData.bufferLevelNew.back() -
-                      (timeNow - m_throughput.transmissionEnd.back()) -
-                      m_videoData.segmentDuration / 2;
+                      (timeNow - m_throughput.transmissionEnd.back());
 
   if (segmentCounter < 3) {
     answer.nextRepIndex = 0;

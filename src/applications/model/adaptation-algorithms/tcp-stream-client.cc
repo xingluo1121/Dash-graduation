@@ -330,12 +330,15 @@ void TcpStreamClient::RequestRepIndex() {
                 "than the maximum");
 
   // time stamp, repnumber, repindex, bw, delay
+  
   std::cout << "** At: " << std::fixed << std::setprecision(3)
             << answer.decisionTime / 1000000.0 << ", Rep " << m_segmentCounter
             << ", Index " << m_currentRepIndex << ", Bw " << std::fixed
             << std::setprecision(3) << answer.estimateTh / 1000000.0
             << ", Delay " << std::fixed << std::setprecision(3)
-            << answer.nextDownloadDelay / 1000000.0 << " **" << std::endl;
+            << answer.nextDownloadDelay / 1000000.0 
+            << ", Case " << answer.decisionCase << " **" << std::endl;
+            
 
   m_playbackData.playbackIndex.push_back(answer.nextRepIndex);
   m_bDelay = answer.nextDownloadDelay;
@@ -403,7 +406,7 @@ std::string TcpStreamClient::ChoseInfoPath(int64_t infoindex) {
   }
   */
   default: {
-    infoStatusTemp = "Segment.txt"; // each line represents a replevel
+    infoStatusTemp = "Roller_ERPO_segmentSize.txt"; // each line represents a replevel
     // infoStatusTemp = "Roller_ERPO_segmentSize.txt";
   }
   }

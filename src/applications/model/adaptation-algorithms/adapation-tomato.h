@@ -17,7 +17,6 @@ public:
 private:
   int64_t m_lastRepIndex;
   int64_t m_targetBuffer;
-  int64_t m_deltaBuffer;
   int64_t m_bufferMin;
   int64_t m_expBuffer;
   int64_t m_multipleTinyDrop;

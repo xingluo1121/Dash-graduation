@@ -11,9 +11,9 @@ SaraAlgorithm::SaraAlgorithm(const videoData &videoData,
                              const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
       m_lastRepIndex(0),      // last Bitrate Level
-      m_bufferHigh(12000000), // 12s
-      m_bufferLow(10000000),  // 10s
-      m_bufferMin(8000000),   // 8s
+      m_bufferHigh(10000000), // 10s
+      m_bufferLow(8000000),  // 8s
+      m_bufferMin(6000000),   // 6s
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -32,8 +32,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
   int64_t bufferNow = 0;
   if (segmentCounter != 0) {
     bufferNow = m_bufferData.bufferLevelNew.back() -
-                (timeNow - m_throughput.transmissionEnd.back()) -
-                m_videoData.segmentDuration / 2;
+                (timeNow - m_throughput.transmissionEnd.back());
     if (bufferNow <= m_bufferMin) {
       answer.nextRepIndex = 0;
       answer.decisionCase = 1;

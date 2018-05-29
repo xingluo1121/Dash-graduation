@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
   NS_ASSERT_MSG(clientPosLog.is_open(), "Couldn't open clientPosLog file");
 
   switch (simulationId) {
-  case 0: { //固定位置
+  case 1: { //固定位置
     Ptr<ListPositionAllocator> positionAlloc =
         CreateObject<ListPositionAllocator>();
     Ptr<RandomDiscPositionAllocator> randPosAlloc =
@@ -247,7 +247,7 @@ int main(int argc, char *argv[]) {
       randPosAlloc->SetX(0);
       randPosAlloc->SetY(0);
       // Vector pos = Vector(randPosAlloc->GetNext());
-      Vector pos = Vector(54, 54, 0);
+      Vector pos = Vector(25, 25, 0);
       positionAlloc->Add(pos);
 
       clientPosLog << ToString(pos.x) << ", " << ToString(pos.y) << ", "
@@ -260,29 +260,15 @@ int main(int argc, char *argv[]) {
     ueMobility_1.Install(ue_nodes);
     break;
   }
-  case 1: { //隨機走動
+  case 2: { //隨機走動
     MobilityHelper ueMobility_2;
     ueMobility_2.SetMobilityModel(
         "ns3::RandomWalk2dMobilityModel", "Mode", StringValue("Time"), "Time",
         StringValue("1s"), "Speed",
         StringValue("ns3::ConstantRandomVariable[Constant=0.83333]"), "Bounds",
-        RectangleValue(Rectangle(-50, -20, -50, -20)));
+        RectangleValue(Rectangle(40, 20, 40, 20)));
     for (uint i = 0; i < numberOfClients; i++) {
       ueMobility_2.Install(ue_nodes.Get(i));
-    }
-    break;
-  }
-  case 2: { //在小區的邊緣試探
-    MobilityHelper ueMobility_3;
-    ueMobility_3.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
-    ueMobility_3.SetPositionAllocator(
-        "ns3::UniformDiscPositionAllocator", "X", DoubleValue(70.0), "Y",
-        DoubleValue(-16.0), "rho", DoubleValue(0));
-    ueMobility_3.Install(ue_nodes);
-    for (int64_t i = 0; i < ue_nodes.GetN(); i++) {
-      Ptr<ConstantVelocityMobilityModel> cvmm =
-          ue_nodes.Get(i)->GetObject<ConstantVelocityMobilityModel>();
-      cvmm->SetVelocity(Vector(0, 0.10, 0.0));
     }
     break;
   }
@@ -290,14 +276,14 @@ int main(int argc, char *argv[]) {
     MobilityHelper ueMobility_4;
     ueMobility_4.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
     ueMobility_4.SetPositionAllocator("ns3::UniformDiscPositionAllocator", "X",
-                                      DoubleValue(-85.0), "Y", DoubleValue(-10),
+                                      DoubleValue(-75.0), "Y", DoubleValue(-10),
                                       "rho", DoubleValue(0));
     ueMobility_4.Install(ue_nodes);
     for (int64_t i = 0; i < ue_nodes.GetN(); i++) {
       Ptr<ConstantVelocityMobilityModel> cvmm =
           ue_nodes.Get(i)->GetObject<ConstantVelocityMobilityModel>();
       cvmm->SetVelocity(Vector(0.833, 0.0, 0.0));
-      Simulator::Schedule(Seconds(204), &COEvent, cvmm,
+      Simulator::Schedule(Seconds(180), &COEvent, cvmm,
                           Vector(-0.833, 0.0, 0.0));
     }
     break;
@@ -382,7 +368,7 @@ int main(int argc, char *argv[]) {
     NS_LOG_INFO("Run Simulation.");
     NS_LOG_INFO("Sim:   " << simulationId
                           << "   Clients:   " << numberOfClients);
-    Simulator::Stop(Seconds(301));
+    Simulator::Stop(Seconds(350));
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Done.");
