@@ -358,16 +358,16 @@ int main(int argc, char *argv[]) {
     clientHelper.SetAttribute("SimulationId", UintegerValue(simulationId));
 
     ApplicationContainer clientApps = clientHelper.Install(clients);
-    clientApps.Get(0)->SetStartTime(Seconds(0));
+    clientApps.Get(0)->SetStartTime(Seconds(2));
 
-    clientApps.Get(1)->SetStartTime(Seconds(30));
-    clientApps.Get(1)->SetStopTime(Seconds(90));
+    clientApps.Get(1)->SetStartTime(Seconds(20));
+    clientApps.Get(1)->SetStopTime(Seconds(80));
     
     clientApps.Get(2)->SetStartTime(Seconds(50));
     clientApps.Get(2)->SetStopTime(Seconds(140));
 
     clientApps.Get(3)->SetStartTime(Seconds(120));
-    clientApps.Get(3)->SetStopTime(Seconds(150));
+    clientApps.Get(3)->SetStopTime(Seconds(140));
     
     clientApps.Get(4)->SetStartTime(Seconds(220));
     clientApps.Get(5)->SetStartTime(Seconds(240));
