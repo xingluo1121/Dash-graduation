@@ -361,16 +361,16 @@ int main(int argc, char *argv[]) {
     clientApps.Get(0)->SetStartTime(Seconds(0));
 
     clientApps.Get(1)->SetStartTime(Seconds(30));
-    clientApps.Get(1)->SetStopTime(Seconds(60));
+    clientApps.Get(1)->SetStopTime(Seconds(90));
     
     clientApps.Get(2)->SetStartTime(Seconds(50));
-    clientApps.Get(2)->SetStopTime(Seconds(100));
+    clientApps.Get(2)->SetStopTime(Seconds(140));
 
     clientApps.Get(3)->SetStartTime(Seconds(120));
     clientApps.Get(3)->SetStopTime(Seconds(150));
     
-    clientApps.Get(4)->SetStartTime(Seconds(90));
-    clientApps.Get(5)->SetStartTime(Seconds(140));
+    clientApps.Get(4)->SetStartTime(Seconds(220));
+    clientApps.Get(5)->SetStartTime(Seconds(240));
 
     NS_LOG_INFO("Run Simulation.");
     NS_LOG_INFO("Sim:   " << simulationId

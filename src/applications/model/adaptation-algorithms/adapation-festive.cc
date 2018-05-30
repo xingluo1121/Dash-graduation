@@ -28,12 +28,12 @@ FestiveAlgorithm::FestiveAlgorithm(const videoData &videoData,
                                    const bufferData &bufferData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_targetBuffer(10000000), // 10s
-      m_delta(1000000),         // 1s
+      m_targetBuffer(m_videoData.segmentDuration*5), 
+      m_delta(m_videoData.segmentDuration*1),         
       m_alpha(12.0), m_highestRepIndex(videoData.averageBitrate[0].size() - 1),
       m_thrptThrsh(0.95) {
   NS_LOG_INFO(this);
-  m_smooth.push_back(5); // after how many steps switch up is possible
+  m_smooth.push_back(3); // after how many steps switch up is possible
   m_smooth.push_back(1); // switch up by how many representatations at once
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
                 "The highest quality representation index should be => 0");

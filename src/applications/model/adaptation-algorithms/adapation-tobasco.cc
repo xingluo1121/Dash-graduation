@@ -33,10 +33,10 @@ TobascoAlgorithm::TobascoAlgorithm(const videoData &videoData,
       m_a3(0.50),        // as the paper
       m_a4(0.75),        // say
       m_a5(0.90),        // do not chage it
-      m_bMin(3000000),   // 3s   //6s
-      m_bLow(9000000),   // 9s   //18s
-      m_bHigh(11000000), // 11s  //22s
-      m_bOpt(10000000),   // 10s //20s
+      m_bMin(m_videoData.segmentDuration*2),   // 2s
+      m_bLow(m_videoData.segmentDuration*4),   // 4s
+      m_bHigh(m_videoData.segmentDuration*6), // 6s
+      m_bOpt(m_videoData.segmentDuration*5),   // 5s
       m_lastRepIndex(0), m_lastBuffer(0), m_runningFastStart(true),
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);

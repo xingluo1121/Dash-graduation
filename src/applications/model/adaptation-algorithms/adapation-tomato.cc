@@ -11,8 +11,8 @@ TomatoAlgorithm::TomatoAlgorithm(const videoData &videoData,
                                  const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
       m_lastRepIndex(0),       // last Bitrate Level
-      m_targetBuffer(8000000), // 8s
-      m_bufferMin(3000000),    // 3s
+      m_targetBuffer(m_videoData.segmentDuration*5), // 5s
+      m_bufferMin(m_videoData.segmentDuration*2),    // 2s
       m_expBuffer(0), // buffer expection ,cal at the beginning of download the
                       // current seg
       m_multipleTinyDrop(0), // cal tiny buffer drop
