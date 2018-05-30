@@ -68,9 +68,9 @@ int main(int argc, char *argv[]) {
 
   uint64_t segmentDuration = 1000000; // ms==> 1s/segment
   uint32_t simulationId = 4;
-  uint32_t numberOfClients = 1;
+  uint32_t numberOfClients = 6;
   uint32_t numberOfEnbs = 8;             // 7
-  std::string adaptationAlgo = "tomato"; //"";
+  std::string adaptationAlgo = "tobasco"; //
   std::string app_type = "Dash";         // Bulk sender | On-Off Sender | Dash
   double eNbTxPower = 43.0;              // 43
   int fading_model = 0;                  // 0 for etu, 1 for eva
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
   Config::SetDefault("ns3::LteEnbRrc::DefaultTransmissionMode",
                      UintegerValue(tx_mode)); // MIMO
   Config::SetDefault("ns3::LteEnbRrc::EpsBearerToRlcMapping",
-                     EnumValue(rlc_mode)); // RLC_UM_Always=2; RLC_AM_Always=3
+                     EnumValue(rlc_mode)); 
   Config::SetDefault("ns3::LteEnbPhy::TxPower", DoubleValue(eNbTxPower));
   GlobalValue::Bind("ChecksumEnabled", BooleanValue(true));
   Config::SetDefault("ns3::TcpSocket::SegmentSize", UintegerValue(1446));
@@ -140,8 +140,6 @@ int main(int argc, char *argv[]) {
   std::ifstream ifTraceFile;
   std::string fading_trace_path;
 
-  if (simulationId == 0)
-    fading_model = 0;
   if (simulationId == 1)
     fading_model = 0;
   if (simulationId == 2)
@@ -244,9 +242,6 @@ int main(int argc, char *argv[]) {
     Ptr<RandomDiscPositionAllocator> randPosAlloc =
         CreateObject<RandomDiscPositionAllocator>();
     for (uint i = 0; i < numberOfClients; i++) {
-      randPosAlloc->SetX(0);
-      randPosAlloc->SetY(0);
-      // Vector pos = Vector(randPosAlloc->GetNext());
       Vector pos = Vector(25, 25, 0);
       positionAlloc->Add(pos);
 
@@ -363,12 +358,24 @@ int main(int argc, char *argv[]) {
     clientHelper.SetAttribute("SimulationId", UintegerValue(simulationId));
 
     ApplicationContainer clientApps = clientHelper.Install(clients);
-    clientApps.Get(0)->SetStartTime(Seconds(2));
+    clientApps.Get(0)->SetStartTime(Seconds(0));
+
+    clientApps.Get(1)->SetStartTime(Seconds(30));
+    clientApps.Get(1)->SetStopTime(Seconds(60));
+    
+    clientApps.Get(2)->SetStartTime(Seconds(50));
+    clientApps.Get(2)->SetStopTime(Seconds(100));
+
+    clientApps.Get(3)->SetStartTime(Seconds(120));
+    clientApps.Get(3)->SetStopTime(Seconds(150));
+    
+    clientApps.Get(4)->SetStartTime(Seconds(90));
+    clientApps.Get(5)->SetStartTime(Seconds(140));
 
     NS_LOG_INFO("Run Simulation.");
     NS_LOG_INFO("Sim:   " << simulationId
                           << "   Clients:   " << numberOfClients);
-    Simulator::Stop(Seconds(350));
+    Simulator::Stop(Seconds(301));
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Done.");

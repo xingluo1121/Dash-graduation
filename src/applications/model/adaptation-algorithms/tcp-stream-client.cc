@@ -16,6 +16,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "tcp-stream-client.h"
+#include <errno.h>
+#include <math.h>
+#include <ns3/core-module.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <algorithm>
+#include <cstring>
+#include <ctime>
+#include <iomanip>
+#include <iterator>
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
 #include "ns3/global-value.h"
 #include "ns3/inet-socket-address.h"
 #include "ns3/inet6-socket-address.h"
@@ -30,25 +45,11 @@
 #include "ns3/trace-source-accessor.h"
 #include "ns3/uinteger.h"
 #include "tcp-stream-server.h"
-#include <algorithm>
-#include <cstring>
-#include <ctime>
-#include <errno.h>
-#include <iomanip>
-#include <iterator>
-#include <math.h>
-#include <ns3/core-module.h>
-#include <numeric>
-#include <sstream>
-#include <stdexcept>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace ns3 {
 
-template <typename T> std::string ToString(T val) {
+template <typename T>
+std::string ToString(T val) {
   std::stringstream stream;
   stream << val;
   return stream.str();
@@ -218,6 +219,15 @@ void TcpStreamClient::Initialise(std::string algorithm, uint16_t clientId) {
                                                     m_bufferData, m_throughput);
     algo = new TobascoAlgorithm(m_videoData, m_playbackData, m_bufferData,
                                 m_throughput);
+  } else if (algorithm == "tobascoL") {
+    userinfoAlgo = new UserPredictionAlgorithm(m_videoData, m_playbackData,
+                                               m_bufferData, m_throughput);
+    // harmonic
+    bandwidthAlgo = new BandwidthLongAvgAlgorithm(m_videoData, m_playbackData,
+                                                   m_bufferData, m_throughput);
+    // designed by tian
+    algo = new TobascoAlgorithm(m_videoData, m_playbackData, m_bufferData,
+                               m_throughput);
   } else if (algorithm == "tomato") {
     userinfoAlgo = new UserPredictionAlgorithm(m_videoData, m_playbackData,
                                                m_bufferData, m_throughput);
@@ -330,15 +340,14 @@ void TcpStreamClient::RequestRepIndex() {
                 "than the maximum");
 
   // time stamp, repnumber, repindex, bw, delay
-  
+
   std::cout << "** At: " << std::fixed << std::setprecision(3)
             << answer.decisionTime / 1000000.0 << ", Rep " << m_segmentCounter
             << ", Index " << m_currentRepIndex << ", Bw " << std::fixed
             << std::setprecision(3) << answer.estimateTh / 1000000.0
             << ", Delay " << std::fixed << std::setprecision(3)
-            << answer.nextDownloadDelay / 1000000.0 
-            << ", Case " << answer.decisionCase << " **" << std::endl;
-            
+            << answer.nextDownloadDelay / 1000000.0 << ", Case "
+            << answer.decisionCase << " **" << std::endl;
 
   m_playbackData.playbackIndex.push_back(answer.nextRepIndex);
   m_bDelay = answer.nextDownloadDelay;
@@ -346,7 +355,8 @@ void TcpStreamClient::RequestRepIndex() {
   LogAdaptation(answer);
 }
 
-template <typename T> void TcpStreamClient::Send(T &message) {
+template <typename T>
+void TcpStreamClient::Send(T &message) {
   NS_LOG_FUNCTION(this);
   PreparePacket(message);
   Ptr<Packet> p;
@@ -380,43 +390,38 @@ std::string TcpStreamClient::ChoseInfoPath(int64_t infoindex) {
   NS_LOG_FUNCTION(this);
   switch (infoindex) {
     /*
-  case 0: {
-    infoStatusTemp = "Help_CMP0_segmentSize.txt";
-    break;
-  }
-  case 1: {
-    infoStatusTemp = "Help_CMP1_segmentSize.txt";
-    break;
-  }
-  case 2: {
-    infoStatusTemp = "Help_CMP2_segmentSize.txt";
-    break;
-  }
-  case 3: {
-    infoStatusTemp = "Help_CMP3_segmentSize.txt";
-    break;
-  }
-  case 4: {
-    infoStatusTemp = "Help_CMP4_segmentSize.txt";
-    break;
-  }
-  case 5: {
-    infoStatusTemp = "Help_CMP5_segmentSize.txt";
-    break;
-  }
-  */
-  default: {
-    infoStatusTemp = "Roller_ERPO_segmentSize.txt"; // each line represents a replevel
-    // infoStatusTemp = "Roller_ERPO_segmentSize.txt";
-  }
+    case 0:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    case 1:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    case 2:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    case 3:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    case 4:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    case 5:{
+      //infoStatusTemp = "SegmentSize.txt"; 
+      //break;
+    }
+    */
+    default: { infoStatusTemp = "SegmentSize.txt"; }
   }
   return infoStatusTemp;
 }
 void TcpStreamClient::GetInfo() {
-  std::ifstream myinfo("UserInfo.txt"); // todo
-  // std::ifstream myinfo("UserInfo_CMP.txt"); // todo
-  for (int64_t s; myinfo >> s;)
-    m_videoData.userInfo.push_back(s);
+  std::ifstream myinfo("UserInfo.txt");
+  for (int64_t s; myinfo >> s;) m_videoData.userInfo.push_back(s);
 }
 
 int TcpStreamClient::ReadInBitrateValues() {
@@ -426,15 +431,13 @@ int TcpStreamClient::ReadInBitrateValues() {
     std::ifstream myfile;
     segmentSizeFile = ChoseInfoPath(i);
     myfile.open(segmentSizeFile.c_str());
-    if (!myfile)
-      return -1;
+    if (!myfile) return -1;
 
     std::string temp;
     int64_t averageByteSizeTemp = 0;
 
     while (std::getline(myfile, temp)) {
-      if (temp.empty())
-        break;
+      if (temp.empty()) break;
       std::istringstream buffer(temp);
       std::vector<int64_t> line((std::istream_iterator<int64_t>(buffer)),
                                 std::istream_iterator<int64_t>());
@@ -449,7 +452,7 @@ int TcpStreamClient::ReadInBitrateValues() {
           (int64_t)std::accumulate(line.begin(), line.end(), 0.0) / line.size();
       avBit.push_back(
           (8.0 * averageByteSizeTemp) /
-          (m_videoData.segmentDuration / 1000000.0)); // averagebitrate: bps
+          (m_videoData.segmentDuration / 1000000.0));  // averagebitrate: bps
       line.clear();
     }
     m_videoData.segmentSize.push_back(comb);
@@ -475,7 +478,7 @@ void TcpStreamClient::SegmentReceivedHandle() {
                       m_throughput.transmissionEnd.back()),
                  (int64_t)0));
   } else {
-    m_bufferData.bufferLevelOld.push_back(0); // first segment
+    m_bufferData.bufferLevelOld.push_back(0);  // first segment
   }
   m_bufferData.bufferLevelNew.push_back(m_bufferData.bufferLevelOld.back() +
                                         m_videoData.segmentDuration);
@@ -587,7 +590,8 @@ void TcpStreamClient::StopApplication() {
   bufferUnderrunLog.close();
 }
 
-template <typename T> void TcpStreamClient::PreparePacket(T &message) {
+template <typename T>
+void TcpStreamClient::PreparePacket(T &message) {
   NS_LOG_FUNCTION(this << message);
   std::ostringstream ss;
   ss << message;
@@ -762,4 +766,4 @@ void TcpStreamClient::InitializeLogFiles(std::string simulationId,
   bufferUnderrunLog.open(buLog.c_str());
 }
 
-} // Namespace ns3
+}  // Namespace ns3
