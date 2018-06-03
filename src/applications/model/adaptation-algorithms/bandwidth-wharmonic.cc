@@ -9,16 +9,15 @@ BandwidthWHarmonicAlgorithm::BandwidthWHarmonicAlgorithm(
     const videoData &videoData, const playbackData &playbackData,
     const bufferData &bufferData, const throughputData &throughput)
     : BandwidthAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_windowSize(5), // 5 segment for smoothing
+      m_windowSize(5),  // 5 segment for smoothing
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
                 "The highest quality representation index should be >= 0");
 }
 
-bandwidthAlgoReply
-BandwidthWHarmonicAlgorithm::BandwidthAlgo(const int64_t segmentCounter,
-                                           const int64_t clientId) {
+bandwidthAlgoReply BandwidthWHarmonicAlgorithm::BandwidthAlgo(
+    const int64_t segmentCounter, const int64_t clientId) {
   bandwidthAlgoReply answer;
   answer.bandwidthAlgoIndex = 3;
   const int64_t timeNow = Simulator::Now().GetMicroSeconds();
@@ -26,9 +25,9 @@ BandwidthWHarmonicAlgorithm::BandwidthAlgo(const int64_t segmentCounter,
   double bandwidthEstimate = 0.0;
 
   if (segmentCounter != 0) {
-    int64_t sumThroughput = 0; // bit
+    int64_t sumThroughput = 0;  // bit
     double transmissionTime = 0.0;
-    if (segmentCounter < m_windowSize) // 5
+    if (segmentCounter < m_windowSize)  // 5
     {
       for (int64_t i = 0; i != segmentCounter; i++) {
         sumThroughput +=
@@ -62,4 +61,4 @@ BandwidthWHarmonicAlgorithm::BandwidthAlgo(const int64_t segmentCounter,
   return answer;
 }
 
-} // namespace ns3
+}  // namespace ns3

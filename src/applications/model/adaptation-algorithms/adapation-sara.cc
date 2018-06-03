@@ -10,10 +10,10 @@ SaraAlgorithm::SaraAlgorithm(const videoData &videoData,
                              const bufferData &bufferData,
                              const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_lastRepIndex(0),      // last Bitrate Level
-      m_bufferHigh(m_videoData.segmentDuration*5), // 5s
-      m_bufferLow(m_videoData.segmentDuration*4),  // 4s
-      m_bufferMin(m_videoData.segmentDuration*2),   // 2s
+      m_lastRepIndex(0),                              // last Bitrate Level
+      m_bufferHigh(m_videoData.segmentDuration * 5),  // 5s
+      m_bufferLow(m_videoData.segmentDuration * 4),   // 4s
+      m_bufferMin(m_videoData.segmentDuration * 2),   // 2s
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -117,4 +117,4 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
   return answer;
 }
 
-} // namespace ns3
+}  // namespace ns3

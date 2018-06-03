@@ -20,12 +20,13 @@
 #ifndef TCP_STREAM_HELPER_H
 #define TCP_STREAM_HELPER_H
 
+#include <stdint.h>
 #include "ns3/application-container.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/ipv6-address.h"
 #include "ns3/node-container.h"
 #include "ns3/object-factory.h"
-#include <stdint.h>
+#include "ns3/phy-rx-stats-calculator.h"
 
 namespace ns3 {
 
@@ -35,7 +36,7 @@ namespace ns3 {
  *        and sends them back to the original sender.
  */
 class TcpStreamServerHelper {
-public:
+ public:
   /**
    * Create TcpStreamServerHelper which will make life easier for people trying
    * to set up simulations with echos.
@@ -85,7 +86,7 @@ public:
    */
   ApplicationContainer Install(NodeContainer c) const;
 
-private:
+ private:
   /**
    * Install an ns3::TcpStreamServer on the node configured with all the
    * attributes set with SetAttribute.
@@ -95,7 +96,7 @@ private:
    */
   Ptr<Application> InstallPriv(Ptr<Node> node) const;
 
-  ObjectFactory m_factory; //!< Object factory.
+  ObjectFactory m_factory;  //!< Object factory.
 };
 
 /**
@@ -104,7 +105,7 @@ private:
  * of this packet
  */
 class TcpStreamClientHelper {
-public:
+ public:
   /**
    * Create TcpStreamClientHelper which will make life easier for people trying
    * to set up simulations with echos.
@@ -113,6 +114,15 @@ public:
    * \param port The port number of the remote tcp stream server
    */
   TcpStreamClientHelper(Address ip, uint16_t port);
+  /**
+   * Create TcpStreamClientHelper which will make life easier for people trying
+   * to set up simulations with echos.
+   *
+   * \param ip The IPv4 address of the remote tcp stream server
+   * \param port The port number of the remote tcp stream server
+   */
+  TcpStreamClientHelper(Address ip, uint16_t port,
+                        const Ptr<PhyRxStatsCalculator> crossLayerInfo);
   /**
    * Create TcpStreamClientHelper which will make life easier for people trying
    * to set up simulations with echos.
@@ -148,10 +158,10 @@ public:
    *
    * \returns the applications created, one application per input node.
    */
-  ApplicationContainer
-  Install(std::vector<std::pair<Ptr<Node>, std::string>> clients) const;
+  ApplicationContainer Install(
+      std::vector<std::pair<Ptr<Node>, std::string>> clients) const;
 
-private:
+ private:
   /**
    * Install an ns3::TcpStreamClient on the node configured with all the
    * attributes set with SetAttribute.
@@ -165,9 +175,10 @@ private:
    */
   Ptr<Application> InstallPriv(Ptr<Node> node, std::string algo,
                                uint16_t clientId) const;
-  ObjectFactory m_factory; //!< Object factory.
+  ObjectFactory m_factory;  //!< Object factory.
+  Ptr<PhyRxStatsCalculator> m_crossLayerInfo;
 };
 
-} // namespace ns3
+}  // namespace ns3
 
 #endif /* TCP_STREAM_HELPER_H */

@@ -9,7 +9,7 @@ BandwidthAvgInTimeAlgorithm::BandwidthAvgInTimeAlgorithm(
     const videoData &videoData, const playbackData &playbackData,
     const bufferData &bufferData, const throughputData &throughput)
     : BandwidthAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_deltaTime(m_videoData.segmentDuration * 5), // 5s
+      m_deltaTime(m_videoData.segmentDuration * 2),
       m_lastBandwidthEstimate(0),
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
@@ -17,9 +17,8 @@ BandwidthAvgInTimeAlgorithm::BandwidthAvgInTimeAlgorithm(
                 "The highest quality representation index should be >= 0");
 }
 
-bandwidthAlgoReply
-BandwidthAvgInTimeAlgorithm::BandwidthAlgo(const int64_t segmentCounter,
-                                           const int64_t clientId) {
+bandwidthAlgoReply BandwidthAvgInTimeAlgorithm::BandwidthAlgo(
+    const int64_t segmentCounter, const int64_t clientId) {
   bandwidthAlgoReply answer;
   answer.bandwidthAlgoIndex = 1;
   const int64_t timeNow = Simulator::Now().GetMicroSeconds();
@@ -75,4 +74,4 @@ double BandwidthAvgInTimeAlgorithm::AverageBandwidth(int64_t t_1, int64_t t_2,
   return m_lastBandwidthEstimate;
 }
 
-} // namespace ns3
+}  // namespace ns3

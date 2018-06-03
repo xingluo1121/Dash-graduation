@@ -18,6 +18,9 @@
 
 #ifndef TCP_STREAM_CLIENT_H
 #define TCP_STREAM_CLIENT_H
+#include <deque>
+#include <fstream>
+#include <iostream>
 #include "adapation-constbitrate.h"
 #include "adapation-festive.h"
 #include "adapation-sara.h"
@@ -31,6 +34,7 @@
 #include "ns3/application.h"
 #include "ns3/event-id.h"
 #include "ns3/ipv4-address.h"
+#include "ns3/phy-rx-stats-calculator.h"
 #include "ns3/ptr.h"
 #include "ns3/traced-callback.h"
 #include "tcp-stream-adaptation.h"
@@ -38,9 +42,6 @@
 #include "tcp-stream-interface.h"
 #include "tcp-stream-userinfo.h"
 #include "userinfo-prediction.h"
-#include <deque>
-#include <fstream>
-#include <iostream>
 
 namespace ns3 {
 
@@ -54,7 +55,7 @@ class Packet;
  * Every segment size request sent is returned by the server and received here.
  */
 class TcpStreamClient : public Application {
-public:
+ public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -72,7 +73,8 @@ public:
    * \param algorithm the name of the algorithm to use for instantiating an
    * adaptation algorithm object.
    */
-  void Initialise(std::string algorithm, uint16_t clientId);
+  void Initialise(std::string algorithm, uint16_t clientId,
+                  const Ptr<PhyRxStatsCalculator> ccrossLayerInfo);
 
   /**
    * \brief Set the remote address and port
@@ -98,10 +100,10 @@ public:
    * \param port remote port
    */
 
-protected:
+ protected:
   virtual void DoDispose(void);
 
-private:
+ private:
   /**
    * \brief This enum is used to define the states of the state machine which
    * controls the behaviour of the client.
@@ -127,8 +129,9 @@ private:
   };
 
   AdaptationAlgorithm *algo;
-  BandwidthAlgorithm *bandwidthAlgo; // add in 12-27
-  UserinfoAlgorithm *userinfoAlgo;   // add in 12-28
+  BandwidthAlgorithm *bandwidthAlgo;  // add in 12-27
+  UserinfoAlgorithm *userinfoAlgo;    // add in 12-28
+  Ptr<PhyRxStatsCalculator> m_crossLayerInfo;
 
   virtual void StartApplication(void);
   virtual void StopApplication(void);
@@ -209,7 +212,8 @@ playbackFinished-> terminal is performed, as explained before.
    *
    * \param message The amount of bytes the server shall send as a respond.
    */
-  template <typename T> void PreparePacket(T &message);
+  template <typename T>
+  void PreparePacket(T &message);
   /**
    * \brief Send a packet to the server.
    *
@@ -217,7 +221,8 @@ playbackFinished-> terminal is performed, as explained before.
    * packet with a string, containig the number of bytes requested from the
    * server.
    */
-  template <typename T> void Send(T &message);
+  template <typename T>
+  void Send(T &message);
   /**
    * \brief Handle a packet reception.
    *
@@ -342,73 +347,77 @@ playbackFinished-> terminal is performed, as explained before.
   std::string ChoseInfoPath(int64_t infoindex);
   void GetInfo();
 
-  uint32_t m_dataSize; //!< packet payload size
-  uint8_t *m_data;     //!< packet payload data
+  uint32_t m_dataSize;  //!< packet payload size
+  uint8_t *m_data;      //!< packet payload data
 
-  Ptr<Socket> m_socket;  //!< Socket
-  Address m_peerAddress; //!< Remote peer address
-  uint16_t m_peerPort;   //!< Remote peer port
+  Ptr<Socket> m_socket;   //!< Socket
+  Address m_peerAddress;  //!< Remote peer address
+  uint16_t m_peerPort;    //!< Remote peer port
 
-  uint16_t m_clientId;     //!< The Id of this client, for logging purposes
-  uint16_t m_simulationId; //!< The Id of this simulation, for logging purposes
-  uint16_t m_numberOfClients; //!< The total number of clients for this
-                              //!< simulation, for logging purposes
-  std::string m_algoName; //!< Name of the apation algorithm's class which this
-                          //!< client will use for the simulation
-  bool m_bufferUnderrun;  //!< True if there is currently a buffer underrun in
-                          //!< the simulated playback
-  int64_t m_currentPlaybackIndex; //!< The index of the segment that is
-                                  //!< currently being played
-  int64_t m_segmentsInBuffer; //!< The number of segments that are currently in
-                              //!< the buffer
-  int64_t m_currentRepIndex;  //!< The index of the currently requested segment
-                              //!< quality
-  int64_t m_lastSegmentIndex; //!< The index of the last segment, i.e. the
-                              //!< total number of segments-1
-  int64_t m_segmentCounter; //!< The index of the next segment to be downloaded
-  int64_t m_downloadedCounter; //!< The maximum index of the segment ever been
-                               //!< downloaded
+  uint16_t m_clientId;      //!< The Id of this client, for logging purposes
+  uint16_t m_simulationId;  //!< The Id of this simulation, for logging purposes
+  uint16_t m_numberOfClients;  //!< The total number of clients for this
+                               //!< simulation, for logging purposes
+  std::string m_algoName;  //!< Name of the apation algorithm's class which this
+                           //!< client will use for the simulation
+  bool m_bufferUnderrun;   //!< True if there is currently a buffer underrun in
+                           //!< the simulated playback
+  int64_t m_currentPlaybackIndex;  //!< The index of the segment that is
+                                   //!< currently being played
+  int64_t m_segmentsInBuffer;  //!< The number of segments that are currently in
+                               //!< the buffer
+  int64_t m_currentRepIndex;   //!< The index of the currently requested segment
+                               //!< quality
+  int64_t m_lastSegmentIndex;  //!< The index of the last segment, i.e. the
+                               //!< total number of segments-1
+  int64_t m_segmentCounter;  //!< The index of the next segment to be downloaded
+  int64_t m_downloadedCounter;  //!< The maximum index of the segment ever been
+                                //!< downloaded
   int64_t m_transmissionStartReceivingSegment =
-      0; //!< The point in time in microseconds when the transmission of a
-         //!< segment begins
+      0;  //!< The point in time in microseconds when the transmission of a
+          //!< segment begins
   int64_t m_transmissionEndReceivingSegment =
-      0; //!< The point in time in microseconds when the transmission of a
-         //!< segment is finished
-  int64_t m_bytesReceived; //!< Counts the amount of received bytes of the
-                           //!< current packet
-  int64_t m_bDelay; //!< Minimum buffer level in microseconds of playback when
-                    //!< the next download must be started
+      0;  //!< The point in time in microseconds when the transmission of a
+          //!< segment is finished
+  int64_t m_bytesReceived;  //!< Counts the amount of received bytes of the
+                            //!< current packet
+  int64_t m_bDelay;  //!< Minimum buffer level in microseconds of playback when
+                     //!< the next download must be started
   int64_t
-      m_highestRepIndex; //!< This is the index of the highest representation
-  uint64_t m_segmentDuration; //!< The duration of a segment in microseconds
+      m_highestRepIndex;  //!< This is the index of the highest representation
+  uint64_t m_segmentDuration;  //!< The duration of a segment in microseconds
 
-  std::string infoStatusTemp;             // add
-  std::string segmentSizeFile;            // add
-  std::vector<std::vector<int64_t>> comb; // add
-  std::vector<double> avBit;              // add
+  std::string infoStatusTemp;              // add
+  std::string segmentSizeFile;             // add
+  std::vector<std::vector<int64_t>> comb;  // add
+  std::vector<double> avBit;               // add
 
   std::ofstream
-      adaptationLog; //!< Output stream for logging adaptation information
-  std::ofstream downloadLog; //!< Output stream for logging download information
-  std::ofstream playbackLog; //!< Output stream for logging playback information
-  std::ofstream bufferLog;   //!< Output stream for logging buffer course
+      adaptationLog;  //!< Output stream for logging adaptation information
   std::ofstream
-      throughputLog; //!< Output stream for logging throughput information
-  std::ofstream bufferUnderrunLog; //!< Output stream for logging starting and
-                                   //!< ending of buffer underruns
+      downloadLog;  //!< Output stream for logging download information
+  std::ofstream
+      playbackLog;          //!< Output stream for logging playback information
+  std::ofstream bufferLog;  //!< Output stream for logging buffer course
+  std::ofstream
+      throughputLog;  //!< Output stream for logging throughput information
+  std::ofstream bufferUnderrunLog;  //!< Output stream for logging starting and
+                                    //!< ending of buffer underruns
 
   uint64_t m_downloadRequestSent =
-      0; //!< Logging the point in time in microseconds when a download request
-         //!< was sent to the server
+      0;  //!< Logging the point in time in microseconds when a download request
+          //!< was sent to the server
 
-  throughputData m_throughput; //!< Tracking the throughput
-  bufferData m_bufferData;     //!< Keep track of the buffer level
-  playbackData m_playbackData; //!< Tracking the simulated playback of segments
-  videoData m_videoData; //!< Information about segment sizes, average bitrates
-                         //!< of representation levels and segment duration in
-                         //!< microseconds
+  throughputData m_throughput;  //!< Tracking the throughput
+  bufferData m_bufferData;      //!< Keep track of the buffer level
+  playbackData m_playbackData;  //!< Tracking the simulated playback of segments
+  videoData m_videoData;  //!< Information about segment sizes, average bitrates
+                          //!< of representation levels and segment duration in
+                          //!< microseconds
+
+  Ptr<PhyRxStatsCalculator> cm_crossLayerInfo;
 };
 
-} // namespace ns3
+}  // namespace ns3
 
 #endif /* TCP_STREAM_CLIENT_H */

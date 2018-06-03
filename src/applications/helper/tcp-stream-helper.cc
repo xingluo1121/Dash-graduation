@@ -39,8 +39,8 @@ ApplicationContainer TcpStreamServerHelper::Install(Ptr<Node> node) const {
   return ApplicationContainer(InstallPriv(node));
 }
 
-ApplicationContainer
-TcpStreamServerHelper::Install(std::string nodeName) const {
+ApplicationContainer TcpStreamServerHelper::Install(
+    std::string nodeName) const {
   Ptr<Node> node = Names::Find<Node>(nodeName);
   return ApplicationContainer(InstallPriv(node));
 }
@@ -61,10 +61,13 @@ Ptr<Application> TcpStreamServerHelper::InstallPriv(Ptr<Node> node) const {
   return app;
 }
 
-TcpStreamClientHelper::TcpStreamClientHelper(Address address, uint16_t port) {
+TcpStreamClientHelper::TcpStreamClientHelper(
+    Address address, uint16_t port,
+    const Ptr<PhyRxStatsCalculator> crossLayerInfo) {
   m_factory.SetTypeId(TcpStreamClient::GetTypeId());
   SetAttribute("RemoteAddress", AddressValue(address));
   SetAttribute("RemotePort", UintegerValue(port));
+  m_crossLayerInfo = crossLayerInfo;
 }
 
 TcpStreamClientHelper::TcpStreamClientHelper(Ipv4Address address,
@@ -102,9 +105,10 @@ Ptr<Application> TcpStreamClientHelper::InstallPriv(Ptr<Node> node,
   Ptr<Application> app = m_factory.Create<TcpStreamClient>();
   app->GetObject<TcpStreamClient>()->SetAttribute("ClientId",
                                                   UintegerValue(clientId));
-  app->GetObject<TcpStreamClient>()->Initialise(algo, clientId);
+  app->GetObject<TcpStreamClient>()->Initialise(algo, clientId,
+                                                m_crossLayerInfo);
   node->AddApplication(app);
   return app;
 }
 
-} // namespace ns3
+}  // namespace ns3

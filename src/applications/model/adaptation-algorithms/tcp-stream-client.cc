@@ -46,8 +46,21 @@
 #include "ns3/uinteger.h"
 #include "tcp-stream-server.h"
 
-namespace ns3 {
+#ifndef CROSSLAYER
+#define CROSSLAYER 1
+#endif  // !1
 
+namespace ns3 {
+std::vector<std::pair<int64_t, int64_t>>
+    pause;  //<Pause BeginTime,Pause End Time>
+bool firstOfBwEstimate = true;
+bool secondOfBwEstimate = true;
+double bandwidthEstimate = 0.0;
+// double bandwidthEstimate_temp1 = 0.0;
+// double bandwidthEstimate_temp2 = 0.0;
+double alpha = 0.2;
+int64_t traceBegin = 0.0;
+static double lastEndTime = 0.0;
 template <typename T>
 std::string ToString(T val) {
   std::stringstream stream;
@@ -197,9 +210,11 @@ TcpStreamClient::TcpStreamClient() {
 }
 
 // void TcpStreamClient::Initialise(std::string algorithm, uint16_t clientId)
-void TcpStreamClient::Initialise(std::string algorithm, uint16_t clientId) {
+void TcpStreamClient::Initialise(
+    std::string algorithm, uint16_t clientId,
+    const Ptr<PhyRxStatsCalculator> ccrossLayerInfo) {
   NS_LOG_FUNCTION(this);
-
+  cm_crossLayerInfo = ccrossLayerInfo;
   m_videoData.segmentDuration = m_segmentDuration;
 
   if (ReadInBitrateValues() == -1) {
@@ -224,16 +239,16 @@ void TcpStreamClient::Initialise(std::string algorithm, uint16_t clientId) {
                                                m_bufferData, m_throughput);
     // harmonic
     bandwidthAlgo = new BandwidthLongAvgAlgorithm(m_videoData, m_playbackData,
-                                                   m_bufferData, m_throughput);
+                                                  m_bufferData, m_throughput);
     // designed by tian
     algo = new TobascoAlgorithm(m_videoData, m_playbackData, m_bufferData,
-                               m_throughput);
+                                m_throughput);
   } else if (algorithm == "tomato") {
     userinfoAlgo = new UserPredictionAlgorithm(m_videoData, m_playbackData,
                                                m_bufferData, m_throughput);
     // harmonic
-    bandwidthAlgo = new BandwidthHarmonicAlgorithm(m_videoData, m_playbackData,
-                                                   m_bufferData, m_throughput);
+    bandwidthAlgo = new BandwidthWHarmonicAlgorithm(m_videoData, m_playbackData,
+                                                    m_bufferData, m_throughput);
     // designed by tian
     algo = new TomatoAlgorithm(m_videoData, m_playbackData, m_bufferData,
                                m_throughput);
@@ -320,8 +335,208 @@ TcpStreamClient::~TcpStreamClient() {
   m_dataSize = 0;
 }
 
+int64_t updateScale(int64_t scale,
+                    std::vector<std::pair<int64_t, int64_t>> pause,
+                    std::vector<std::pair<int64_t, int64_t>> new_stats) {
+  int64_t updateTimescale = scale;
+  if (pause.empty() || new_stats.empty()) return updateTimescale;
+  for (uint64_t i = 0; i < pause.size(); i++) {
+    int64_t StartTime = pause.at(i).first;  // early
+    int64_t EndTime = pause.at(i).second;   // late
+    if (0 < new_stats.at(new_stats.size() - 1).first &&
+        new_stats.at(new_stats.size() - 1).first < StartTime &&
+        new_stats.at(0).first > EndTime) {
+      // std::cout<<"-----L--P "<<StartTime<<" ****P "<<EndTime<<"
+      // --L----"<<"\n";
+      updateTimescale = updateTimescale - (EndTime - StartTime);
+    } else if ((new_stats.at(new_stats.size() - 1).first > StartTime) &&
+               (0 < new_stats.at(new_stats.size() - 1).first &&
+                new_stats.at(new_stats.size() - 1).first < EndTime)) {
+      // std::cout<<"-----P "<<StartTime<<" **L**P "<<StartTime<<"
+      // ----L----"<<"\n";
+      updateTimescale = updateTimescale -
+                        (EndTime - new_stats.at(new_stats.size() - 1).first);
+    } else {
+      // std::cout<<"-----P "<<StartTime<<" ****P "<<StartTime<<"
+      // ----L-----L----"<<"\n";
+    }
+  }
+  return updateTimescale;
+}
+
+double BWEstimate(std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats,
+                  std::vector<std::pair<int64_t, int64_t>> pause) {
+  double bandwidthEstimate_inter = 0.0;
+  std::deque<PhyRxStatsCalculator::Time_Tbs>::iterator point;
+  if (phy_stats.empty()) return bandwidthEstimate_inter;
+  std::vector<std::pair<int64_t, int64_t>> new_stats;
+  uint32_t cum_tbs = 0;
+  std::deque<double> phy_throughput;
+  double updateTimescale = 0.0;
+  //**********every 1ms
+  uint32_t RequestTime = phy_stats.at(0).timestamp;
+  uint32_t intervalTime = alpha * 500;  // 50; //ms //200
+  if (RequestTime > intervalTime) {
+    RequestTime = RequestTime - intervalTime;
+  }               // first sample: currentTime-500ms
+  int32_t k = 0;  // sample number
+  while (RequestTime > phy_stats.at(phy_stats.size() - 1).timestamp &&
+         (k < 50)) {
+    uint32_t L = 0;
+    for (uint64_t i = 0; i < phy_stats.size(); i++) {
+      if (phy_stats.at(i).timestamp < RequestTime) {
+        L = (phy_stats.at(i).timestamp - RequestTime) <
+                    (phy_stats.at(i - 1).timestamp - RequestTime)
+                ? i
+                : (i - 1);
+        break;
+      }
+    }
+    std::deque<std::pair<int64_t, int64_t>> new_stats_right;
+    std::deque<std::pair<int64_t, int64_t>> new_stats_left;
+    for (point = phy_stats.begin() + L; point != phy_stats.end();
+         point++)  // uint64_t i = L; i < phy_stats.size(); i++)
+    {
+      if (((*point).timestamp < (RequestTime)) &&
+          ((*point).timestamp > (RequestTime - intervalTime))) {
+        std::pair<int64_t, int64_t> temp;
+        temp.first = (int64_t)((*point).timestamp);
+        temp.second = (int64_t)((*point).tbsize);
+        if (temp.first >= traceBegin && traceBegin > 0) {
+          new_stats_right.push_back(temp);
+        }
+      }
+    }
+    if (new_stats_right.empty())  // if deta time is not enought, then deta num
+    {
+      for (point = phy_stats.begin() + L; point != phy_stats.end(); point++) {
+        int64_t right = 1;
+        if (((*point).timestamp < (RequestTime)) && (right < 400)) {
+          std::pair<int64_t, int64_t> temp;
+          temp.first = (int64_t)((*point).timestamp);
+          temp.second = (int64_t)((*point).tbsize);
+          if (temp.first >= traceBegin && traceBegin > 0) {
+            new_stats_right.push_back(temp);
+            right++;
+          }
+        }
+      }
+    }
+    for (point = phy_stats.begin() + L; point != phy_stats.begin();
+         point--)  //(uint64_t i = L; i > 0; i--)
+    {
+      if (((*point).timestamp > (RequestTime)) &&
+          ((*point).timestamp < (RequestTime + intervalTime))) {
+        std::pair<int64_t, int64_t> temp;
+        temp.first = (int64_t)((*point).timestamp);
+        temp.second = (int64_t)((*point).tbsize);
+        if (temp.first >= traceBegin && traceBegin > 0) {
+          new_stats_left.push_front(temp);
+        }
+      }
+    }
+    if (new_stats_left.empty())  // if deta time is not enought, then deta num
+    {
+      for (point = phy_stats.begin() + L; point != phy_stats.begin();
+           point--)  //(uint64_t i = L; i > 0; i--)
+      {
+        int64_t left = 1;
+        if (((*point).timestamp > (RequestTime)) && (left < 400)) {
+          std::pair<int64_t, int64_t> temp;
+          temp.first = (int64_t)((*point).timestamp);
+          temp.second = (int64_t)((*point).tbsize);
+          if (temp.first >= traceBegin && traceBegin > 0) {
+            new_stats_left.push_front(temp);
+            left++;
+          }
+        }
+      }
+    }
+
+    std::deque<std::pair<int64_t, int64_t>>::iterator it;
+    for (it = new_stats_left.begin(); it != new_stats_left.end(); it++)
+      new_stats.push_back(*it);
+    for (it = new_stats_right.begin(); it != new_stats_right.end(); it++)
+      new_stats.push_back(*it);  // get every new_stats
+    new_stats_left.clear();
+    new_stats_right.clear();
+    if (new_stats.size() > 3) {
+      new_stats.at(0).second = (uint32_t)0;  // delete the last TBSize, layer 0
+      new_stats.at(1).second = (uint32_t)0;  // delete the last TBSize, layer 1
+      for (uint64_t i = 0; i < new_stats.size(); i++) {
+        cum_tbs += new_stats.at(i).second;
+      }
+      int64_t scale =
+          new_stats.at(0).first - new_stats.at(new_stats.size() - 1).first;
+      updateTimescale = updateScale(scale, pause, new_stats);
+      phy_throughput.push_back(static_cast<double>(cum_tbs) * 8000 /
+                               (updateTimescale));  // bps
+      cum_tbs = 0;
+      new_stats.clear();
+    } else {
+      std::cout << "new_stats.size()<=3"
+                << "\n";
+    }
+    if (RequestTime > intervalTime) {
+      RequestTime = RequestTime - intervalTime;
+      k++;
+    } else {
+      break;
+    }
+  }
+  if (phy_throughput.empty())
+    bandwidthEstimate_inter = 0;
+  else {
+    if (phy_throughput.size() < 5) {
+      double aveBandwidth = 0;
+      for (std::deque<double>::iterator it = phy_throughput.begin();
+           it != phy_throughput.end(); it++) {
+        aveBandwidth += *it;
+      }
+      bandwidthEstimate_inter = (double)aveBandwidth / phy_throughput.size();
+    } else {
+      double temp_s = 0, temp_ss = 0;
+      for (std::deque<double>::reverse_iterator it = phy_throughput.rbegin();
+           it != phy_throughput.rend(); it++) {
+        if (it == phy_throughput.rbegin()) temp_s = *it;
+        if (it == phy_throughput.rbegin() + 1) {
+          temp_s = alpha * (*it) + (1 - alpha) * temp_s;
+          temp_ss = temp_s;
+        }
+        temp_s = alpha * (*it) + (1 - alpha) * temp_s;
+        temp_ss = alpha * temp_s + (1 - alpha) * temp_ss;
+        bandwidthEstimate_inter =
+            2 * temp_s - temp_ss + (temp_s - temp_ss);  // T=1s
+      }
+    }
+  }
+  phy_throughput.clear();
+  return bandwidthEstimate_inter;
+}
+static double GetPhyRate(Ptr<PhyRxStatsCalculator> phy_rx_stats,
+                         int64_t StartTime, int64_t EndTime, int64_t traceBegin,
+                         uint16_t m_clientId) {
+  //<\logging all the pause
+  std::pair<int64_t, int64_t> pausetemp;
+  pausetemp.first = StartTime;
+  pausetemp.second = EndTime;
+  if (pausetemp.first > 0 && pausetemp.second > 0) pause.push_back(pausetemp);
+  //<\end
+  std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats =
+      phy_rx_stats->GetCorrectTbs();
+  double bandwidthEstimate_update =
+      0.9 *
+      BWEstimate(phy_stats, pause);  // update Global val BandWidth by add all
+  return bandwidthEstimate_update;
+}
+
 void TcpStreamClient::RequestRepIndex() {
   NS_LOG_FUNCTION(this);
+
+  int64_t PauseStartTime = lastEndTime;  // lastDownloadEnd==CurrentPauseStart
+  int64_t PauseEndTime = Simulator::Now().GetMicroSeconds() / 1000;
+  bandwidthEstimate = GetPhyRate(cm_crossLayerInfo, PauseStartTime,
+                                 PauseEndTime, traceBegin, m_clientId);
 
   userinfoAlgoReply userinfoanswer;
   bandwidthAlgoReply bandwidthanswer;
@@ -329,8 +544,16 @@ void TcpStreamClient::RequestRepIndex() {
 
   userinfoanswer = userinfoAlgo->UserinfoAlgo(m_segmentCounter, m_clientId);
   bandwidthanswer = bandwidthAlgo->BandwidthAlgo(m_segmentCounter, m_clientId);
-  answer = algo->GetNextRep(m_segmentCounter, m_clientId,
-                            bandwidthanswer.bandwidthEstimate);
+
+  if (!CROSSLAYER)
+    answer = algo->GetNextRep(m_segmentCounter, m_clientId,
+                              bandwidthanswer.bandwidthEstimate);
+  else
+    answer = algo->GetNextRep(m_segmentCounter, m_clientId,
+                              bandwidthEstimate);  //<crosslayer_BW
+
+  if (m_segmentCounter == 0)
+    traceBegin = (int64_t)answer.decisionTime / 1000;  // ms
 
   m_videoData.repIndex.push_back(answer.nextRepIndex);
   m_currentRepIndex = answer.nextRepIndex;
@@ -391,27 +614,27 @@ std::string TcpStreamClient::ChoseInfoPath(int64_t infoindex) {
   switch (infoindex) {
     /*
     case 0:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     case 1:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     case 2:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     case 3:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     case 4:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     case 5:{
-      //infoStatusTemp = "SegmentSize.txt"; 
+      //infoStatusTemp = "SegmentSize.txt";
       //break;
     }
     */
@@ -469,7 +692,7 @@ int TcpStreamClient::ReadInBitrateValues() {
 void TcpStreamClient::SegmentReceivedHandle() {
   NS_LOG_FUNCTION(this);
   m_transmissionEndReceivingSegment = Simulator::Now().GetMicroSeconds();
-
+  lastEndTime = (int64_t)m_transmissionEndReceivingSegment / 1000;
   m_bufferData.timeNow.push_back(m_transmissionEndReceivingSegment);
   if (m_segmentCounter > 0) {
     m_bufferData.bufferLevelOld.push_back(

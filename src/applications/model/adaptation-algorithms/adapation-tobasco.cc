@@ -28,16 +28,22 @@ TobascoAlgorithm::TobascoAlgorithm(const videoData &videoData,
                                    const bufferData &bufferData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_a1(0.85),        // these param
-      m_a2(0.33),        // are set
-      m_a3(0.50),        // as the paper
-      m_a4(0.75),        // say
-      m_a5(0.90),        // do not chage it
-      m_bMin(m_videoData.segmentDuration*2),   // 2s
-      m_bLow(m_videoData.segmentDuration*4),   // 4s
-      m_bHigh(m_videoData.segmentDuration*6), // 6s
-      m_bOpt(m_videoData.segmentDuration*5),   // 5s
-      m_lastRepIndex(0), m_lastBuffer(0), m_runningFastStart(true),
+      m_a1(0.85),  // these param
+      m_a2(0.33),  // are set
+      m_a3(0.50),  // as the paper
+      m_a4(0.75),  // say
+      m_a5(0.90),  // do not chage it
+      // m_bMin(m_videoData.segmentDuration*2),   // 2s
+      // m_bLow(m_videoData.segmentDuration*4),   // 4s
+      // m_bHigh(m_videoData.segmentDuration*6), // 6s
+      // m_bOpt(m_videoData.segmentDuration*5),   // 5s
+      m_bMin(10000000),   // 10s
+      m_bLow(15000000),   // 15s
+      m_bHigh(25000000),  // 25s
+      m_bOpt(20000000),   // 20s
+      m_lastRepIndex(0),
+      m_lastBuffer(0),
+      m_runningFastStart(true),
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -162,4 +168,4 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
   return answer;
 }
 
-} // namespace ns3
+}  // namespace ns3
