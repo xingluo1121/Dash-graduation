@@ -28,7 +28,7 @@ namespace ns3 {
  * \brief Implementation of the Festive adaptation algorithm
  */
 class FestiveAlgorithm : public AdaptationAlgorithm {
- public:
+public:
   FestiveAlgorithm(const videoData &videoData, const playbackData &playbackData,
                    const bufferData &bufferData,
                    const throughputData &throughput);
@@ -36,7 +36,7 @@ class FestiveAlgorithm : public AdaptationAlgorithm {
   algorithmReply GetNextRep(const int64_t segmentCounter,
                             const int64_t clientId, int64_t bandwidth);
 
- private:
+private:
   int64_t m_targetBuffer;
   const int64_t m_delta;
   const double m_alpha;
@@ -46,5 +46,5 @@ class FestiveAlgorithm : public AdaptationAlgorithm {
   std::vector<int> m_smooth;
 };
 
-}  // namespace ns3
+} // namespace ns3
 #endif /* FESTIVE_ALGORITHM_H */

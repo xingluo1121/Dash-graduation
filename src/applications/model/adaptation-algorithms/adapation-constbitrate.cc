@@ -10,8 +10,8 @@ constbitrateAlgorithm::constbitrateAlgorithm(const videoData &videoData,
                                              const bufferData &bufferData,
                                              const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_constRepIndex(4),
-      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // 15s
+      m_constRepIndex(4),                                   // const repIndex
+      m_bufferUpperbound(m_videoData.segmentDuration * 15), // upper bound
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -43,7 +43,6 @@ algorithmReply constbitrateAlgorithm::GetNextRep(const int64_t segmentCounter,
     }
   }
   //
-
   return answer;
 }
-}  // namespace ns3
+} // namespace ns3

@@ -10,14 +10,14 @@ TomatoAlgorithm::TomatoAlgorithm(const videoData &videoData,
                                  const bufferData &bufferData,
                                  const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_lastRepIndex(0),                                // last Bitrate Level
-      m_targetBuffer(m_videoData.segmentDuration * 5),  // 5s
-      m_bufferMin(m_videoData.segmentDuration * 2),     // 2s
-      m_expBuffer(0),  // buffer expection ,cal at the beginning of download the
-                       // current seg
-      m_multipleTinyDrop(0),  // cal tiny buffer drop
-      m_beta(0.0),            // adjust buffer upper bound
-      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // 15s
+      m_lastRepIndex(0),                               // last Bitrate Level
+      m_targetBuffer(m_videoData.segmentDuration * 5), // 5s
+      m_bufferMin(m_videoData.segmentDuration * 2),    // 2s
+      m_expBuffer(0), // buffer expection ,cal at the beginning of download the
+                      // current seg
+      m_multipleTinyDrop(0), // cal tiny buffer drop
+      m_beta(0.0),           // adjust buffer upper bound
+      m_bufferUpperbound(m_videoData.segmentDuration * 15), // 15s
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -40,9 +40,9 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
                 (timeNow - m_throughput.transmissionEnd.back());
     double alpha =
         bufferNow > m_targetBuffer ? 1.0 : bufferNow / m_targetBuffer;
-    if (bufferNow <= m_bufferMin) {
+    if (bufferNow < m_bufferMin) {
       answer.nextRepIndex = 0;
-      answer.decisionCase = 1;
+      answer.decisionCase = 0;
     } else {
       if (bandwidth > 0) {
         int64_t nextHighestIndex = m_highestRepIndex;
@@ -55,8 +55,13 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
         }
         if (nextHighestIndex > m_lastRepIndex) {
           if (bufferNow > m_expBuffer) {
-            nextHighestIndex = m_lastRepIndex + 1;
-            answer.decisionCase = 2;
+            if (bufferNow > m_expBuffer + m_videoData.segmentDuration) {
+              // nextHighestIndex = nextHighestIndex;
+              answer.decisionCase = 1;
+            } else {
+              nextHighestIndex = m_lastRepIndex + 1;
+              answer.decisionCase = 2;
+            }
           } else {
             nextHighestIndex = m_lastRepIndex;
             answer.decisionCase = 3;
@@ -89,7 +94,8 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
             } else {
               nextHighestIndex = m_lastRepIndex;
               answer.decisionCase = 9;
-              if (bufferNow < m_expBuffer) ++m_multipleTinyDrop;
+              if (bufferNow < m_expBuffer)
+                ++m_multipleTinyDrop;
             }
           }
         } else {
@@ -103,9 +109,9 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
       }
     }
 
-    double lastbeta = m_beta;  // lastbeta
+    double lastbeta = m_beta; // lastbeta
     m_beta = 1.0 + answer.nextRepIndex /
-                       (double)m_highestRepIndex;  // beta base value = 1.0;
+                       (double)m_highestRepIndex; // beta base value = 1.0;
 
     // insure beta is smooth
     if (m_beta < lastbeta) {
@@ -138,10 +144,9 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
              m_videoData.averageBitrate
                  .at(m_videoData.userInfo.at(segmentCounter))
                  .at(answer.nextRepIndex)) /
-            //(lastSegmentThroughput * alpha / 1000);
             (lastSegmentThroughput / 1000);
 
-        if (answer.nextDownloadDelay / 3 > extraDonwloadTime) {
+        if (answer.nextDownloadDelay / 2 > extraDonwloadTime) {
           answer.nextRepIndex = answer.nextRepIndex + 1;
           answer.nextDownloadDelay =
               answer.nextDownloadDelay > extraDonwloadTime;
@@ -169,6 +174,6 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
   //
 
   return answer;
-}  // namespace ns3
+} // namespace ns3
 
-}  // namespace ns3
+} // namespace ns3
