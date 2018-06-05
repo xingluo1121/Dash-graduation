@@ -165,6 +165,7 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
   }
 
   // add for xhinaxobile
+  expectBuffer = std::max(expectBuffer, bufferNow);
   if (expectBuffer > m_bufferUpperbound - m_videoData.segmentDuration) {
     answer.nextDownloadDelay +=
         expectBuffer - (m_bufferUpperbound - m_videoData.segmentDuration);
