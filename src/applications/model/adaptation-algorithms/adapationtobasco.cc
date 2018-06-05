@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "adapation-tobasco.h"
+#include "adapationtobasco.h"
 
 namespace ns3 {
 
@@ -28,20 +28,15 @@ TobascoAlgorithm::TobascoAlgorithm(const videoData &videoData,
                                    const bufferData &bufferData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_a1(0.85),  // these param
-      m_a2(0.33),  // are set
-      m_a3(0.50),  // as the paper
-      m_a4(0.75),  // say
-      m_a5(0.90),  // do not chage it
-      // m_bMin(m_videoData.segmentDuration*2),   // 2s
-      // m_bLow(m_videoData.segmentDuration*4),   // 4s
-      // m_bHigh(m_videoData.segmentDuration*6), // 6s
-      // m_bOpt(m_videoData.segmentDuration*5),   // 5s
-      m_bMin(10000000),              // 10s
-      m_bLow(15000000),              // 15s
-      m_bHigh(25000000),             // 25s
-      m_bOpt(20000000),              // 20s
-      m_bufferUpperbound(40000000),  // 40s
+      m_a1(0.85),                                 // these param
+      m_a2(0.33),                                 // are set
+      m_a3(0.50),                                 // as the paper
+      m_a4(0.75),                                 // say
+      m_a5(0.90),                                 // do not chage it
+      m_bMin(m_videoData.segmentDuration * 4),    // 4s->8s
+      m_bLow(m_videoData.segmentDuration * 8),    // 8s->16s
+      m_bHigh(m_videoData.segmentDuration * 10),  // 10s->20s
+      m_bOpt((m_bLow + m_bHigh) / 2),             // 9s->18s
       m_lastRepIndex(0),
       m_lastBuffer(0),
       m_runningFastStart(true),
@@ -53,11 +48,12 @@ TobascoAlgorithm::TobascoAlgorithm(const videoData &videoData,
 
 algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
                                             const int64_t clientId,
-                                            int64_t bandwidth) {
+                                            int64_t extraParameter,
+                                            int64_t extraParameter2) {
   int64_t decisionCase = 0;
   int64_t delayDecision = 0;
   int64_t nextRepIndex = 0;
-  int64_t expectBuffer = 0;
+  int64_t bDelay = 0;
   const int64_t timeNow = Simulator::Now().GetMicroSeconds();
   int64_t bufferNow = 0;
   if (segmentCounter != 0) {
@@ -78,29 +74,29 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
     bool isValid = segmentCounter >= 3
                        ? (m_videoData.averageBitrate
                               .at(m_videoData.userInfo.at(segmentCounter))
-                              .at(m_lastRepIndex) <= m_a1 * bandwidth)
+                              .at(m_lastRepIndex) <= m_a1 * extraParameter)
                        : true;
     if (m_runningFastStart && m_lastRepIndex != m_highestRepIndex &&
         bufferNow >= m_lastBuffer && isValid) {
       if (bufferNow < m_bMin) {
-        if (nextHighestRepBitrate <= (m_a2 * bandwidth)) {
+        if (nextHighestRepBitrate <= (m_a2 * extraParameter)) {
           decisionCase = 1;
           nextRepIndex = m_lastRepIndex + 1;
         }
       } else if (bufferNow < m_bLow) {
-        if (nextHighestRepBitrate <= (m_a3 * bandwidth)) {
+        if (nextHighestRepBitrate <= (m_a3 * extraParameter)) {
           decisionCase = 2;
           nextRepIndex = m_lastRepIndex + 1;
         }
       } else {
-        if (nextHighestRepBitrate <= (m_a4 * bandwidth)) {
+        if (nextHighestRepBitrate <= (m_a4 * extraParameter)) {
           decisionCase = 3;
           nextRepIndex = m_lastRepIndex + 1;
         }
         if (bufferNow > m_bHigh) {
           decisionCase = 4;
           delayDecision = 1;
-          expectBuffer = m_bHigh - m_videoData.segmentDuration;
+          bDelay = m_bHigh - m_videoData.segmentDuration;
         }
       }
     } else {
@@ -127,18 +123,18 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
         }
       } else if (bufferNow < m_bHigh) {
         if ((m_lastRepIndex == m_highestRepIndex) ||
-            (nextHighestRepBitrate >= m_a5 * bandwidth)) {
+            (nextHighestRepBitrate >= m_a5 * extraParameter)) {
           decisionCase = 7;
           delayDecision = 2;
-          expectBuffer = (int64_t)(
+          bDelay = (int64_t)(
               std::max(bufferNow - m_videoData.segmentDuration, m_bOpt));
         }
       } else {
         if ((m_lastRepIndex == m_highestRepIndex) ||
-            (nextHighestRepBitrate >= m_a5 * bandwidth)) {
+            (nextHighestRepBitrate >= m_a5 * extraParameter)) {
           decisionCase = 8;
           delayDecision = 3;
-          expectBuffer = (int64_t)(
+          bDelay = (int64_t)(
               std::max(bufferNow - m_videoData.segmentDuration, m_bOpt));
         } else {
           decisionCase = 9;
@@ -148,31 +144,24 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
     }
   }
 
-  algorithmReply answer;
-  answer.nextRepIndex = nextRepIndex;
-  answer.decisionTime = timeNow;
-  answer.decisionCase = decisionCase;
-  answer.nextDownloadDelay = 0;
-  answer.delayDecisionCase = delayDecision;
-  answer.estimateTh = bandwidth;
-
   if (segmentCounter != 0 && delayDecision != 0) {
-    if (expectBuffer < bufferNow) {
-      answer.nextDownloadDelay = 0;
+    if (bDelay > bufferNow) {
+      bDelay = 0;
     } else {
-      answer.nextDownloadDelay = bufferNow - expectBuffer;
+      bDelay = bufferNow - bDelay;
     }
   }
-
-  // add for xhinaxobile
-  if (expectBuffer > m_bufferUpperbound - m_videoData.segmentDuration) {
-    answer.nextDownloadDelay +=
-        expectBuffer - (m_bufferUpperbound - m_videoData.segmentDuration);
-  }
-  //
-
   m_lastRepIndex = nextRepIndex;
+  algorithmReply answer;
   m_lastBuffer = bufferNow;
+
+  answer.nextRepIndex = nextRepIndex;
+  answer.nextDownloadDelay = bDelay;
+  answer.decisionTime = timeNow;
+  answer.decisionCase = decisionCase;
+  answer.delayDecisionCase = delayDecision;
+  answer.estimateTh = extraParameter;
+
   return answer;
 }
 

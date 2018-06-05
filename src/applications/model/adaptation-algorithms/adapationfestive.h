@@ -19,7 +19,7 @@
 #ifndef FESTIVE_ALGORITHM_H
 #define FESTIVE_ALGORITHM_H
 
-#include "tcp-stream-adaptation.h"
+#include "tcp-stream-adaptation-algorithm.h"
 
 namespace ns3 {
 
@@ -34,13 +34,13 @@ class FestiveAlgorithm : public AdaptationAlgorithm {
                    const throughputData &throughput);
 
   algorithmReply GetNextRep(const int64_t segmentCounter,
-                            const int64_t clientId, int64_t bandwidth);
+                            const int64_t clientId, int64_t extraParameter,
+                            int64_t extraParameter2);
 
  private:
   int64_t m_targetBuffer;
   const int64_t m_delta;
   const double m_alpha;
-  const int64_t m_bufferUpperbound;
   const int64_t m_highestRepIndex;
   const double m_thrptThrsh;
   std::vector<int> m_smooth;

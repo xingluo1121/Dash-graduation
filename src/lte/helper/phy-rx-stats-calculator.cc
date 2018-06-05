@@ -211,6 +211,7 @@ To get TBSize
 std::deque<PhyRxStatsCalculator::Time_Tbs> PhyRxStatsCalculator::GetCorrectTbs(
     void) {
   std::deque<PhyRxStatsCalculator::Time_Tbs> result_temp = result;
+  result_temp.resize(5000);
   result_temp.at((result_temp.size() - 1)).timescale =
       (double)(result_temp.at(0).timestamp -
                result_temp.at(result_temp.size() - 1).timestamp);

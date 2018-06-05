@@ -47,7 +47,7 @@
 #include "tcp-stream-server.h"
 
 #ifndef CROSSLAYER
-#define CROSSLAYER 1
+#define CROSSLAYER 0
 #endif  // !1
 
 namespace ns3 {
@@ -56,8 +56,6 @@ std::vector<std::pair<int64_t, int64_t>>
 bool firstOfBwEstimate = true;
 bool secondOfBwEstimate = true;
 double bandwidthEstimate = 0.0;
-// double bandwidthEstimate_temp1 = 0.0;
-// double bandwidthEstimate_temp2 = 0.0;
 double alpha = 0.2;
 int64_t traceBegin = 0.0;
 static double lastEndTime = 0.0;
@@ -375,7 +373,7 @@ double BWEstimate(std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats,
   double updateTimescale = 0.0;
   //**********every 1ms
   uint32_t RequestTime = phy_stats.at(0).timestamp;
-  uint32_t intervalTime = alpha * 500;  // 50; //ms //200
+  uint32_t intervalTime = 500;  // 50; //ms //200
   if (RequestTime > intervalTime) {
     RequestTime = RequestTime - intervalTime;
   }               // first sample: currentTime-500ms
@@ -409,9 +407,9 @@ double BWEstimate(std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats,
     }
     if (new_stats_right.empty())  // if deta time is not enought, then deta num
     {
+      int64_t right = 1;
       for (point = phy_stats.begin() + L; point != phy_stats.end(); point++) {
-        int64_t right = 1;
-        if (((*point).timestamp < (RequestTime)) && (right < 400)) {
+        if (((*point).timestamp < (RequestTime)) && (right < 40)) {
           std::pair<int64_t, int64_t> temp;
           temp.first = (int64_t)((*point).timestamp);
           temp.second = (int64_t)((*point).tbsize);
@@ -437,11 +435,11 @@ double BWEstimate(std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats,
     }
     if (new_stats_left.empty())  // if deta time is not enought, then deta num
     {
+      int64_t left = 1;
       for (point = phy_stats.begin() + L; point != phy_stats.begin();
            point--)  //(uint64_t i = L; i > 0; i--)
       {
-        int64_t left = 1;
-        if (((*point).timestamp > (RequestTime)) && (left < 400)) {
+        if (((*point).timestamp > (RequestTime)) && (left < 40)) {
           std::pair<int64_t, int64_t> temp;
           temp.first = (int64_t)((*point).timestamp);
           temp.second = (int64_t)((*point).tbsize);
@@ -487,6 +485,7 @@ double BWEstimate(std::deque<PhyRxStatsCalculator::Time_Tbs> phy_stats,
   if (phy_throughput.empty())
     bandwidthEstimate_inter = 0;
   else {
+    if (phy_throughput.size() < 5) phy_throughput.resize(50);
     if (phy_throughput.size() < 5) {
       double aveBandwidth = 0;
       for (std::deque<double>::iterator it = phy_throughput.begin();

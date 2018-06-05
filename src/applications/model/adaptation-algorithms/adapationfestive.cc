@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "adapation-festive.h"
+#include "adapationfestive.h"
 
 namespace ns3 {
 
@@ -28,12 +28,11 @@ FestiveAlgorithm::FestiveAlgorithm(const videoData &videoData,
                                    const bufferData &bufferData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_targetBuffer(m_videoData.segmentDuration * 10),
-      m_delta(m_videoData.segmentDuration * 2),
+      m_targetBuffer(m_videoData.segmentDuration * 10),  // 10s
+      m_delta(m_videoData.segmentDuration * 2),          // 2s
       m_alpha(12.0),
-      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // 15s
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1),
-      m_thrptThrsh(0.95) {
+      m_thrptThrsh(0.90) {
   NS_LOG_INFO(this);
   m_smooth.push_back(3);  // after how many steps switch up is possible
   m_smooth.push_back(1);  // switch up by how many representatations at once
@@ -43,7 +42,8 @@ FestiveAlgorithm::FestiveAlgorithm(const videoData &videoData,
 
 algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
                                             const int64_t clientId,
-                                            int64_t bandwidth) {
+                                            int64_t extraParameter,
+                                            int64_t extraParameter2) {
   int64_t timeNow = Simulator::Now().GetMicroSeconds();
   bool decisionMade = false;
   algorithmReply answer;
@@ -54,7 +54,7 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
   if (segmentCounter == 0) {
     answer.nextRepIndex = 0;
     answer.decisionCase = 0;
-    answer.estimateTh = bandwidth;
+    answer.estimateTh = extraParameter;
     return answer;
   }
   // buffer control
@@ -67,8 +67,8 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
     return answer;
   }
 
-  double thrptEstimation = bandwidth;
-  answer.estimateTh = bandwidth;
+  double thrptEstimation = extraParameter;
+  answer.estimateTh = extraParameter;
 
   int64_t lowerBound = m_targetBuffer - m_delta;
   int64_t upperBound = m_targetBuffer + m_delta;
@@ -78,13 +78,6 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
     answer.nextDownloadDelay = bufferNow - randBuf;
     answer.delayDecisionCase = 1;
   }
-
-  // add for xhinaxobile
-  if (randBuf > m_bufferUpperbound - m_videoData.segmentDuration) {
-    answer.nextDownloadDelay +=
-        randBuf - (m_bufferUpperbound - m_videoData.segmentDuration);
-  }
-  //
 
   int64_t currentRepIndex = m_playbackData.playbackIndex.back();
   int64_t refIndex = currentRepIndex;

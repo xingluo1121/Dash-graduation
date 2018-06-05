@@ -16,35 +16,39 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef FESTIVE_ALGORITHM_H
-#define FESTIVE_ALGORITHM_H
+#ifndef PANDA_ALGORITHM_H
+#define PANDA_ALGORITHM_H
 
-#include "tcp-stream-adaptation.h"
+#include "tcp-stream-adaptation-algorithm.h"
 
 namespace ns3 {
-
-/**
- * \ingroup tcpStream
- * \brief Implementation of the Festive adaptation algorithm
- */
-class FestiveAlgorithm : public AdaptationAlgorithm {
+// do not use this algo
+class PandaAlgorithm : public AdaptationAlgorithm {
  public:
-  FestiveAlgorithm(const videoData &videoData, const playbackData &playbackData,
-                   const bufferData &bufferData,
-                   const throughputData &throughput);
+  PandaAlgorithm(const videoData &videoData, const playbackData &playbackData,
+                 const bufferData &bufferData,
+                 const throughputData &throughput);
 
   algorithmReply GetNextRep(const int64_t segmentCounter,
-                            const int64_t clientId, int64_t bandwidth);
+                            const int64_t clientId, int64_t extraParameter,
+                            int64_t extraParameter2);
 
  private:
-  int64_t m_targetBuffer;
-  const int64_t m_delta;
+  int FindLargest(const double smoothBandwidthShare,
+                  const int64_t segmentCounter, const double delta);
+  const double m_kappa;
+  const double m_omega;
   const double m_alpha;
-  const int64_t m_bufferUpperbound;
+  const double m_beta;
+  const double m_epsilon;
+  const int64_t m_bMin;
   const int64_t m_highestRepIndex;
-  const double m_thrptThrsh;
-  std::vector<int> m_smooth;
+  int64_t m_lastBuffer;
+  double m_lastTargetInterrequestTime;
+  double m_lastBandwidthShare;
+  double m_lastSmoothBandwidthShare;
+  double m_lastVideoIndex;
 };
 
 }  // namespace ns3
-#endif /* FESTIVE_ALGORITHM_H */
+#endif /* PANDA_ALGORITHM_H */

@@ -45,6 +45,7 @@ private:
   const int64_t m_bLow;
   const int64_t m_bHigh;
   const int64_t m_bOpt;
+  const int64_t m_bufferUpperbound;
   int64_t m_lastRepIndex;
   int64_t m_lastBuffer;
   bool m_runningFastStart;

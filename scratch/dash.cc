@@ -69,14 +69,14 @@ int main(int argc, char *argv[]) {
 
   uint64_t segmentDuration = 1000000;  // ms==> 1s/segment
   uint32_t simulationId = 4;
-  uint32_t numberOfClients = 6;
-  uint32_t numberOfEnbs = 8;              // 7
-  std::string adaptationAlgo = "tomato";  //
-  std::string app_type = "Dash";          // Bulk sender | On-Off Sender | Dash
-  double eNbTxPower = 43.0;               // 43
-  int fading_model = 0;                   // 0 for etu, 1 for eva
-  int load = 0;                           // 0 for low load, 1 for high load
-  int rlc_mode = 3;                       // UM = 2; AM = 3
+  uint32_t numberOfClients = 1;
+  uint32_t numberOfEnbs = 8;               // 7
+  std::string adaptationAlgo = "tobasco";  //
+  std::string app_type = "Dash";           // Bulk sender | On-Off Sender | Dash
+  double eNbTxPower = 43.0;                // 43
+  int fading_model = 0;                    // 0 for etu, 1 for eva
+  int load = 0;                            // 0 for low load, 1 for high load
+  int rlc_mode = 3;                        // UM = 2; AM = 3
   int tx_mode = 2;
   int bandwidth = 75;
   std::string data_rate = "100Gbps";  // 100Gbps
@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
       MobilityHelper ueMobility_4;
       ueMobility_4.SetMobilityModel("ns3::ConstantVelocityMobilityModel");
       ueMobility_4.SetPositionAllocator(
-          "ns3::UniformDiscPositionAllocator", "X", DoubleValue(-75.0), "Y",
+          "ns3::UniformDiscPositionAllocator", "X", DoubleValue(-90.0), "Y",
           DoubleValue(-10), "rho", DoubleValue(0));
       ueMobility_4.Install(ue_nodes);
       for (int64_t i = 0; i < ue_nodes.GetN(); i++) {
@@ -360,19 +360,19 @@ int main(int argc, char *argv[]) {
     ApplicationContainer clientApps = clientHelper.Install(clients);
     clientApps.Get(0)->SetStartTime(Seconds(2));
     clientApps.Get(0)->SetStopTime(Seconds(302));
+    /*
+        clientApps.Get(1)->SetStartTime(Seconds(2));
+        clientApps.Get(1)->SetStopTime(Seconds(62));
 
-    clientApps.Get(1)->SetStartTime(Seconds(2));
-    clientApps.Get(1)->SetStopTime(Seconds(62));
+        clientApps.Get(2)->SetStartTime(Seconds(2));
+        clientApps.Get(2)->SetStopTime(Seconds(102));
 
-    clientApps.Get(2)->SetStartTime(Seconds(2));
-    clientApps.Get(2)->SetStopTime(Seconds(102));
+        clientApps.Get(3)->SetStartTime(Seconds(122));
+        clientApps.Get(3)->SetStopTime(Seconds(162));
 
-    clientApps.Get(3)->SetStartTime(Seconds(122));
-    clientApps.Get(3)->SetStopTime(Seconds(162));
-
-    clientApps.Get(4)->SetStartTime(Seconds(142));
-    clientApps.Get(5)->SetStartTime(Seconds(302));
-
+        clientApps.Get(4)->SetStartTime(Seconds(142));
+        clientApps.Get(5)->SetStartTime(Seconds(302));
+    */
     NS_LOG_INFO("Run Simulation.");
     NS_LOG_INFO("Sim:   " << simulationId
                           << "   Clients:   " << numberOfClients);

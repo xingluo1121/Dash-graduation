@@ -1,4 +1,4 @@
-#include "adapation-sara.h"
+#include "adapationsara.h"
 
 namespace ns3 {
 
@@ -10,11 +10,10 @@ SaraAlgorithm::SaraAlgorithm(const videoData &videoData,
                              const bufferData &bufferData,
                              const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_lastRepIndex(0),                               // last Bitrate Level
-      m_bufferHigh(m_videoData.segmentDuration * 10),  // 5s
-      m_bufferLow(m_videoData.segmentDuration * 8),    // 4s
-      m_bufferMin(m_videoData.segmentDuration * 6),    // 2s
-      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // 15s
+      m_lastRepIndex(0),
+      m_bufferHigh(m_videoData.segmentDuration * 12),
+      m_bufferLow(m_videoData.segmentDuration * 10),
+      m_bufferMin(m_videoData.segmentDuration * 8),
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -23,7 +22,8 @@ SaraAlgorithm::SaraAlgorithm(const videoData &videoData,
 
 algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                                          const int64_t clientId,
-                                         int64_t bandwidth) {
+                                         int64_t extraParameter,
+                                         int64_t extraParameter2) {
   algorithmReply answer;
   answer.decisionCase = 0;
   answer.delayDecisionCase = 0;
@@ -42,7 +42,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                              .at(m_videoData.userInfo.at(segmentCounter))
                              .at(m_lastRepIndex)
                              .at(segmentCounter)) /
-              bandwidth >
+              extraParameter >
           (bufferNow - m_bufferMin) / 1000000.0) {
         int nextRepIndex;
         for (nextRepIndex = 0; nextRepIndex < m_lastRepIndex; nextRepIndex++) {
@@ -50,7 +50,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                                  .at(m_videoData.userInfo.at(segmentCounter))
                                  .at(nextRepIndex)
                                  .at(segmentCounter)) /
-                  bandwidth >
+                  extraParameter >
               (bufferNow - m_bufferMin) / 1000000.0)
             break;
         }
@@ -62,7 +62,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                                .at(m_videoData.userInfo.at(segmentCounter))
                                .at(m_lastRepIndex + 1)
                                .at(segmentCounter)) /
-                    bandwidth <=
+                    extraParameter <=
                 (bufferNow - m_bufferMin) / 1000000.0) {
           answer.nextRepIndex = m_lastRepIndex + 1;
           answer.decisionCase = 4;
@@ -78,7 +78,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                                  .at(m_videoData.userInfo.at(segmentCounter))
                                  .at(nextRepIndex)
                                  .at(segmentCounter)) /
-                  bandwidth <=
+                  extraParameter <=
               (bufferNow - m_bufferMin) / 1000000.0)
             break;
         }
@@ -92,7 +92,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
                                  .at(m_videoData.userInfo.at(segmentCounter))
                                  .at(nextRepIndex)
                                  .at(segmentCounter)) /
-                  bandwidth <=
+                  extraParameter <=
               (bufferNow - m_bufferLow) / 1000000.0)
             break;
         }
@@ -112,15 +112,7 @@ algorithmReply SaraAlgorithm::GetNextRep(const int64_t segmentCounter,
     answer.nextRepIndex = m_lastRepIndex;
     answer.decisionCase = 0;
   }
-
-  // add for xhinaxobile
-  if (m_bufferHigh > m_bufferUpperbound - m_videoData.segmentDuration) {
-    answer.nextDownloadDelay +=
-        m_bufferHigh - (m_bufferUpperbound - m_videoData.segmentDuration);
-  }
-  //
-
-  answer.estimateTh = bandwidth;
+  answer.estimateTh = extraParameter;
   m_lastRepIndex = answer.nextRepIndex;
 
   return answer;
