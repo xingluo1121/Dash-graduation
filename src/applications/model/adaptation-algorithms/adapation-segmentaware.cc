@@ -1,14 +1,13 @@
-#include "adapation-tomato.h"
+#include "adapation-segmentaware.h"
 
 namespace ns3 {
+NS_LOG_COMPONENT_DEFINE("SegmentAwareAlgorithm");
+NS_OBJECT_ENSURE_REGISTERED(SegmentAwareAlgorithm);
 
-NS_LOG_COMPONENT_DEFINE("TomatoAlgorithm");
-NS_OBJECT_ENSURE_REGISTERED(TomatoAlgorithm);
-
-TomatoAlgorithm::TomatoAlgorithm(const videoData &videoData,
-                                 const playbackData &playbackData,
-                                 const bufferData &bufferData,
-                                 const throughputData &throughput)
+SegmentAwareAlgorithm::SegmentAwareAlgorithm(const videoData &videoData,
+                                             const playbackData &playbackData,
+                                             const bufferData &bufferData,
+                                             const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
       m_lastRepIndex(0),                               // last Bitrate Level
       m_targetBuffer(m_videoData.segmentDuration * 6), // 6s
@@ -24,10 +23,9 @@ TomatoAlgorithm::TomatoAlgorithm(const videoData &videoData,
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
                 "The highest quality representation index should be >= 0");
 }
-
-algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
-                                           const int64_t clientId,
-                                           int64_t bandwidth) {
+algorithmReply SegmentAwareAlgorithm::GetNextRep(const int64_t segmentCounter,
+                                                 const int64_t clientId,
+                                                 int64_t bandwidth) {
   algorithmReply answer;
   answer.decisionCase = 0;
   answer.delayDecisionCase = 0;
@@ -36,6 +34,29 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
   answer.decisionTime = timeNow;
 
   int64_t bufferNow = 0;
+
+  std::vector<std::vector<double>> instantBitrate;
+  std::vector<double> temp;
+  int64_t viewPoint = m_videoData.segmentSize.size();
+  int64_t repLevel = m_videoData.segmentSize[0].size();
+  int64_t maxSegmentCounter = m_videoData.segmentSize[0][0].size();
+  int64_t windowSize = 2;
+
+  for (int64_t vp = 0; vp < viewPoint; ++vp) {
+    for (int64_t rl = 0; rl < repLevel; ++rl) {
+      int64_t sum = 0;
+      int64_t num = 0;
+      for (int64_t cur = segmentCounter;
+           num < windowSize && cur < maxSegmentCounter; ++cur) {
+        sum += 8.0 * m_videoData.segmentSize[vp][rl][cur];
+        ++num;
+      }
+      temp.emplace_back(sum / (double)(num));
+    }
+    instantBitrate.push_back(temp);
+    temp.clear();
+  }
+
   if (segmentCounter != 0) {
     bufferNow = m_bufferData.bufferLevelNew.back() -
                 (timeNow - m_throughput.transmissionEnd.back());
@@ -49,11 +70,11 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
         int64_t nextHighestIndex = m_highestRepIndex;
 
         while (nextHighestIndex > 0 &&
-               m_videoData.averageBitrate
-                       .at(m_videoData.userInfo.at(segmentCounter))
+               instantBitrate.at(m_videoData.userInfo.at(segmentCounter))
                        .at(nextHighestIndex) > bandwidth * alpha) {
           nextHighestIndex--;
         }
+
         if (nextHighestIndex > m_lastRepIndex) {
           if (bufferNow > m_expBuffer) {
             if (bufferNow > m_expBuffer + m_videoData.segmentDuration) {
@@ -128,7 +149,7 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
                                                    // insure beta is smooth
     m_beta = m_beta < 2.0 ? m_beta : 2.0;
     m_beta = (lastbeta + m_beta) / 2;
-    // std::cout << m_beta << std::endl;
+
     // cal next downloaddelay
     if (bufferNow > m_targetBuffer * m_beta &&
         answer.nextRepIndex >= m_lastRepIndex && bufferNow > m_expBuffer) {
@@ -149,11 +170,9 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
              m_throughput.transmissionStart.at(segmentCounter - 1));
 
         double extraDonwloadTime =
-            (m_videoData.averageBitrate
-                 .at(m_videoData.userInfo.at(segmentCounter))
+            (instantBitrate.at(m_videoData.userInfo.at(segmentCounter))
                  .at(answer.nextRepIndex + 1) -
-             m_videoData.averageBitrate
-                 .at(m_videoData.userInfo.at(segmentCounter))
+             instantBitrate.at(m_videoData.userInfo.at(segmentCounter))
                  .at(answer.nextRepIndex)) /
             (lastSegmentThroughput / 1000);
 
@@ -172,6 +191,7 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
     answer.nextDownloadDelay = 0;
     answer.delayDecisionCase = 0;
   }
+
   answer.estimateTh = bandwidth;
   m_lastRepIndex = answer.nextRepIndex;
   m_expBuffer =
@@ -191,6 +211,5 @@ algorithmReply TomatoAlgorithm::GetNextRep(const int64_t segmentCounter,
   }
 
   return answer;
-} // namespace ns3
-
+}
 } // namespace ns3

@@ -231,15 +231,15 @@ void TcpStreamClient::Initialise(
                                                     m_bufferData, m_throughput);
     algo = new TobascoAlgorithm(m_videoData, m_playbackData, m_bufferData,
                                 m_throughput);
-  } else if (algorithm == "tobascoL") {
+  } else if (algorithm == "segmentaware") {
     userinfoAlgo = new UserPredictionAlgorithm(m_videoData, m_playbackData,
                                                m_bufferData, m_throughput);
     // harmonic
-    bandwidthAlgo = new BandwidthLongAvgAlgorithm(m_videoData, m_playbackData,
-                                                  m_bufferData, m_throughput);
+    bandwidthAlgo = new BandwidthWHarmonicAlgorithm(m_videoData, m_playbackData,
+                                                    m_bufferData, m_throughput);
     // designed by tian
-    algo = new TobascoAlgorithm(m_videoData, m_playbackData, m_bufferData,
-                                m_throughput);
+    algo = new SegmentAwareAlgorithm(m_videoData, m_playbackData, m_bufferData,
+                                     m_throughput);
   } else if (algorithm == "tomato") {
     userinfoAlgo = new UserPredictionAlgorithm(m_videoData, m_playbackData,
                                                m_bufferData, m_throughput);
@@ -639,7 +639,8 @@ std::string TcpStreamClient::ChoseInfoPath(int64_t infoindex) {
     //break;
   }
   */
-  default: { infoStatusTemp = "SegmentSize.txt"; }
+  default: { infoStatusTemp = "Help_CMP_segmentSize.txt"; }
+    // default: { infoStatusTemp = "Help_CMP_segmentSize.txt"; }
   }
   return infoStatusTemp;
 }
@@ -684,6 +685,10 @@ int TcpStreamClient::ReadInBitrateValues() {
     }
     m_videoData.segmentSize.push_back(comb);
     m_videoData.averageBitrate.push_back(avBit);
+    for (auto avbit : avBit) {
+      std::cout << avbit << "\t";
+    }
+    std::cout << std::endl;
     comb.clear();
     avBit.clear();
   }

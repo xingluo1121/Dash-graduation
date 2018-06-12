@@ -133,7 +133,7 @@ struct videoData {
                            //!< representation i in bits
                            // 2-D vector, < viewPoint < RepsLevel's Bitrate >
   int64_t segmentDuration; //!< duration of a segment in microseconds
-  std::vector<int64_t> repIndex; // repIndex choosen
+  std::vector<int64_t> repIndex; // repIndex
   std::vector<int64_t> userInfo; // userViewPoint
 };
 

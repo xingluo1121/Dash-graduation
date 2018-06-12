@@ -32,7 +32,7 @@ TobascoAlgorithm::TobascoAlgorithm(const videoData &videoData,
       m_a2(0.33),                                           // are set
       m_a3(0.50),                                           // as the paper
       m_a4(0.75),                                           // say
-      m_a5(0.90),                                           // do not chage it
+      m_a5(0.95),                                           // do not chage it
       m_bMin(m_videoData.segmentDuration * 4),              // 2s
       m_bLow(m_videoData.segmentDuration * 8),              // 8s
       m_bHigh(m_videoData.segmentDuration * 12),            // 12s

@@ -1,5 +1,5 @@
-#ifndef TOMATO_ALGORITHM_H
-#define TOMATO_ALGORITHM_H
+#ifndef SEGMENTAWARE_ALGORITHM_H
+#define SEGMENTAWARE_ALGORITHM_H
 
 #include "tcp-stream-adaptation.h"
 #include <algorithm>
@@ -8,11 +8,12 @@
 
 namespace ns3 {
 // designed by tian
-class TomatoAlgorithm : public AdaptationAlgorithm {
+class SegmentAwareAlgorithm : public AdaptationAlgorithm {
 public:
-  TomatoAlgorithm(const videoData &videoData, const playbackData &playbackData,
-                  const bufferData &bufferData,
-                  const throughputData &throughput);
+  SegmentAwareAlgorithm(const videoData &videoData,
+                        const playbackData &playbackData,
+                        const bufferData &bufferData,
+                        const throughputData &throughput);
 
   algorithmReply GetNextRep(const int64_t segmentCounter,
                             const int64_t clientId, int64_t bandwidth);
@@ -31,4 +32,5 @@ private:
 };
 
 } // namespace ns3
-#endif /* TOMATO_ALGORITHM_H */
+
+#endif // !SEGMENTAWARE_ALGORITHM_H
