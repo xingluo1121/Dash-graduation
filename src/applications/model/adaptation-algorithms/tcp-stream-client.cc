@@ -639,7 +639,7 @@ std::string TcpStreamClient::ChoseInfoPath(int64_t infoindex) {
     //break;
   }
   */
-  default: { infoStatusTemp = "Help_CMP_segmentSize.txt"; }
+  default: { infoStatusTemp = "Roller_TSP_segmentSize.txt"; }
     // default: { infoStatusTemp = "Help_CMP_segmentSize.txt"; }
   }
   return infoStatusTemp;
