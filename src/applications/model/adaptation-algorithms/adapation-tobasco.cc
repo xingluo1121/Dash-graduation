@@ -164,6 +164,8 @@ algorithmReply TobascoAlgorithm::GetNextRep(const int64_t segmentCounter,
     answer.nextDownloadDelay +=
         expectBuffer - (m_bufferUpperbound - m_videoData.segmentDuration);
   }
+  answer.nextDownloadDelay =
+      answer.nextDownloadDelay >= 0 ? answer.nextDownloadDelay : 0;
   //
 
   m_lastRepIndex = nextRepIndex;

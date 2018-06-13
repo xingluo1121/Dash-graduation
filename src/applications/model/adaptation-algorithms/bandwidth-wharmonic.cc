@@ -19,9 +19,7 @@ BandwidthWHarmonicAlgorithm::BandwidthWHarmonicAlgorithm(
 bandwidthAlgoReply BandwidthWHarmonicAlgorithm::BandwidthAlgo(
     const int64_t segmentCounter, const int64_t clientId) {
   bandwidthAlgoReply answer;
-  answer.bandwidthAlgoIndex = 3;
-  const int64_t timeNow = Simulator::Now().GetMicroSeconds();
-  answer.decisionTime = timeNow;
+  
   double bandwidthEstimate = 0.0;
 
   if (segmentCounter != 0) {

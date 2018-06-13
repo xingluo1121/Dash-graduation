@@ -21,9 +21,6 @@ BandwidthLongAvgAlgorithm::BandwidthAlgo(const int64_t segmentCounter,
                                          const int64_t clientId) // reservation
 {
   bandwidthAlgoReply answer;
-  answer.bandwidthAlgoIndex = 3;
-  const int64_t timeNow = Simulator::Now().GetMicroSeconds();
-  answer.decisionTime = timeNow;
 
   if (segmentCounter != 0) {
     double lastSegmentDownloadTime =

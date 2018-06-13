@@ -33,42 +33,20 @@ namespace ns3 {
  * which representation index and inter-request time to select.
  */
 struct algorithmReply {
-  int64_t nextRepIndex; //!< representation level index of the next segement to
-                        //!< be downloaded by the client
-  int64_t nextDownloadDelay; //!< delay time in microseconds when the next
-                             //!< segment shall be requested from the server
-  int64_t decisionTime; //!< time in microsends when the adaptation algorithm
-                        //!< decided which segment to download next, only for
-                        //!< logging purposes
-  int64_t
-      decisionCase; //!< indicate in which part of the adaptation algorithm's
-                    //!< code the decision was made, which representation level
-                    //!< to request next, only for logging purposes
-  int64_t delayDecisionCase; //!< indicate in which part of the adaptation
-                             //!< algorithm's code the decision was made, how
-                             //!< much time in microsends to wait until the
-                             //!< segment shall be requested from server, only
-                             //!< for logging purposes
+  int64_t nextRepIndex;
+  int64_t nextDownloadDelay;
+  int64_t decisionTime;
+  int64_t decisionCase;
+  int64_t delayDecisionCase;
   double estimateTh;
 };
 
-struct bandwidthAlgoReply // added in 12-27
-{
-  int64_t bandwidthAlgoIndex; //!< bandwidthAvg = 1 bandwidthCrosslayer = 2
-                              //!< default = 0
-  double bandwidthEstimate;   //!< bandwidth estimation value
-  int64_t decisionTime; //!< time in microsends when the bandwidth algorithm
-                        //!< works, only for logging purposes
-  int64_t
-      decisionCase; //!< for BandwidthCrosslayer, decision = 0
-                    //!< ->BandwidthDefault, decision = 1->BandwidthCrosslayer
-                    // !<for BandwithAvg,decison = 0->0(not enough data),
-                    // decison =1->BandwidthAvg
+struct bandwidthAlgoReply {
+  double bandwidthEstimate;
+  int64_t decisionCase;
 };
-struct userinfoAlgoReply // added in 12-28
-{
-  int64_t decisionTime; //!< time in microsends when the bandwidth algorithm
-                        //!< works, only for logging purposes
+struct userinfoAlgoReply {
+  int64_t decisionTime;
 };
 /*! \class throughputData tcp-stream-interface.h "model/tcp-stream-interface.h"
  *  \ingroup tcpStream

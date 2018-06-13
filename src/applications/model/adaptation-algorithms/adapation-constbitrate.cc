@@ -10,8 +10,8 @@ constbitrateAlgorithm::constbitrateAlgorithm(const videoData &videoData,
                                              const bufferData &bufferData,
                                              const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_constRepIndex(4),                                   // const repIndex
-      m_bufferUpperbound(m_videoData.segmentDuration * 15), // upper bound
+      m_constRepIndex(4),                                    // const repIndex
+      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // upper bound
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1) {
   NS_LOG_INFO(this);
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
@@ -24,13 +24,10 @@ algorithmReply constbitrateAlgorithm::GetNextRep(const int64_t segmentCounter,
   algorithmReply answer;
   int64_t timeNow = Simulator::Now().GetMicroSeconds();
   answer.decisionTime = timeNow;
-
   answer.nextRepIndex = m_constRepIndex;
   answer.decisionCase = 0;
-
   answer.nextDownloadDelay = 0;
   answer.delayDecisionCase = 0;
-
   answer.estimateTh = bandwidth;
 
   // add for xhinaxobile
@@ -45,4 +42,4 @@ algorithmReply constbitrateAlgorithm::GetNextRep(const int64_t segmentCounter,
   //
   return answer;
 }
-} // namespace ns3
+}  // namespace ns3

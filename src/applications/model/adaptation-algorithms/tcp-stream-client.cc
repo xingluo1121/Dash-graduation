@@ -867,8 +867,8 @@ void TcpStreamClient::LogDownload() {
       m_videoData.segmentSize.at(m_videoData.userInfo.at(m_segmentCounter))
           .at(m_currentRepIndex)
           .at(m_segmentCounter) /
-      (m_transmissionEndReceivingSegment / (double)1000000 -
-       m_transmissionStartReceivingSegment / (double)1000000);
+      (m_transmissionEndReceivingSegment / 1000000.0 -
+       m_transmissionStartReceivingSegment / 1000000.0);
   double instantBitrate =
       8 *
       m_videoData.segmentSize.at(m_videoData.userInfo.at(m_segmentCounter))
