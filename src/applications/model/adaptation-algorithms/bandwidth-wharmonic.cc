@@ -19,7 +19,7 @@ BandwidthWHarmonicAlgorithm::BandwidthWHarmonicAlgorithm(
 bandwidthAlgoReply BandwidthWHarmonicAlgorithm::BandwidthAlgo(
     const int64_t segmentCounter, const int64_t clientId) {
   bandwidthAlgoReply answer;
-  
+
   double bandwidthEstimate = 0.0;
 
   if (segmentCounter != 0) {

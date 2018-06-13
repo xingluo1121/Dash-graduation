@@ -5,7 +5,7 @@
 namespace ns3 {
 // todo
 class UserPredictionAlgorithm : public UserinfoAlgorithm {
-public:
+ public:
   UserPredictionAlgorithm(const videoData &videoData,
                           const playbackData &playbackData,
                           const bufferData &bufferData,
@@ -15,5 +15,5 @@ public:
                                  const int64_t clientId);
 };
 
-} // namespace ns3
+}  // namespace ns3
 #endif /* BUFFERCLEAN_ALGORITHM_H */

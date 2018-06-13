@@ -28,15 +28,15 @@ FestiveAlgorithm::FestiveAlgorithm(const videoData &videoData,
                                    const bufferData &bufferData,
                                    const throughputData &throughput)
     : AdaptationAlgorithm(videoData, playbackData, bufferData, throughput),
-      m_targetBuffer(m_videoData.segmentDuration * 10), // target buffer
-      m_delta(m_videoData.segmentDuration * 1),         // [tar-del,tar+del]
-      m_alpha(12.0),                                    // a param in score-cal
-      m_bufferUpperbound(m_videoData.segmentDuration * 15), // upper bound
+      m_targetBuffer(m_videoData.segmentDuration * 10),  // target buffer
+      m_delta(m_videoData.segmentDuration * 1),          // [tar-del,tar+del]
+      m_alpha(12.0),                                     // a param in score-cal
+      m_bufferUpperbound(m_videoData.segmentDuration * 15),  // upper bound
       m_highestRepIndex(videoData.averageBitrate[0].size() - 1),
       m_thrptThrsh(0.95) {
   NS_LOG_INFO(this);
-  m_smooth.push_back(5); // after how many steps switch up is possible
-  m_smooth.push_back(1); // switch up by how many representatations at once
+  m_smooth.push_back(5);  // after how many steps switch up is possible
+  m_smooth.push_back(1);  // switch up by how many representatations at once
   NS_ASSERT_MSG(m_highestRepIndex >= 0,
                 "The highest quality representation index should be => 0");
 }
@@ -172,4 +172,4 @@ algorithmReply FestiveAlgorithm::GetNextRep(const int64_t segmentCounter,
     return answer;
   }
 }
-} // namespace ns3
+}  // namespace ns3

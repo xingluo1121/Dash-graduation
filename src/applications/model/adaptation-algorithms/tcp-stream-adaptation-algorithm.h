@@ -18,43 +18,43 @@
 
 #ifndef ADAPTATION_ALGORITHM_H
 #define ADAPTATION_ALGORITHM_H
+#include <assert.h>
+#include <math.h>
+#include <stdint.h>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <numeric>
+#include <queue>
+#include <stdexcept>
+#include <vector>
 #include "ns3/application.h"
 #include "ns3/log.h"
 #include "ns3/nstime.h"
 #include "ns3/simulator.h"
 #include "tcp-stream-interface.h"
-#include <algorithm>
-#include <assert.h>
-#include <fstream>
-#include <iostream>
-#include <math.h>
-#include <numeric>
-#include <queue>
-#include <stdexcept>
-#include <stdint.h>
-#include <vector>
 
 namespace ns3 {
 
 class AdaptationAlgorithm : public Object {
-public:
+ public:
   AdaptationAlgorithm(const videoData &videoData,
                       const playbackData &playbackData,
                       const bufferData &bufferData,
                       const throughputData &throughput);
 
-  virtual algorithmReply
-  GetNextRep(const int64_t segmentCounter, const int64_t clientId,
-             int64_t extraParameter,  // usually this is bandwidth
-             int64_t extraParameter2) // usually this is not of use
+  virtual algorithmReply GetNextRep(
+      const int64_t segmentCounter, const int64_t clientId,
+      int64_t extraParameter,   // usually this is bandwidth
+      int64_t extraParameter2)  // usually this is not of use
       = 0;
 
-protected:
+ protected:
   const videoData &m_videoData;
   const bufferData &m_bufferData;
   const throughputData &m_throughput;
   const playbackData &m_playbackData;
 };
 
-} // namespace ns3
+}  // namespace ns3
 #endif /* ADAPTATION_ALGORITHM_H */

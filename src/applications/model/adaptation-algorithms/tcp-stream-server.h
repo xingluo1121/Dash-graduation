@@ -19,13 +19,13 @@
 #ifndef TCP_STREAM_SERVER_H
 #define TCP_STREAM_SERVER_H
 
+#include <map>
 #include "ns3/address.h"
 #include "ns3/application.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/traced-callback.h"
-#include <map>
 
 namespace ns3 {
 
@@ -44,13 +44,13 @@ class PropagationDelayModel;
  * client separately.
  */
 struct callbackData {
-  uint32_t currentTxBytes; //!< already sent bytes for this particular segment,
-                           //!< set to 0 if sent bytes == packetSizeToReturn, so
-                           //!< transmission for this segment is over
-  uint32_t packetSizeToReturn; //!< total amount of bytes that have to be
-                               //!< returned to the client
-  bool send; //!< true as long as there are still bytes left to be sent for the
-             //!< current segment
+  uint32_t currentTxBytes;  //!< already sent bytes for this particular segment,
+                            //!< set to 0 if sent bytes == packetSizeToReturn,
+                            //!< so transmission for this segment is over
+  uint32_t packetSizeToReturn;  //!< total amount of bytes that have to be
+                                //!< returned to the client
+  bool send;  //!< true as long as there are still bytes left to be sent for the
+              //!< current segment
 };
 
 /**
@@ -61,7 +61,7 @@ struct callbackData {
  * to them.
  */
 class TcpStreamServer : public Application {
-public:
+ public:
   /**
    * \brief Get the type ID.
    * \return the object TypeId
@@ -70,10 +70,10 @@ public:
   TcpStreamServer();
   virtual ~TcpStreamServer();
 
-protected:
+ protected:
   virtual void DoDispose(void);
 
-private:
+ private:
   virtual void StartApplication(void);
   virtual void StopApplication(void);
 
@@ -133,17 +133,17 @@ private:
    */
   int64_t GetCommand(Ptr<Packet> packet);
 
-  uint16_t m_port;       //!< Port on which we listen for incoming packets.
-  Ptr<Socket> m_socket;  //!< IPv4 Socket
-  Ptr<Socket> m_socket6; //!< IPv6 Socket
+  uint16_t m_port;        //!< Port on which we listen for incoming packets.
+  Ptr<Socket> m_socket;   //!< IPv4 Socket
+  Ptr<Socket> m_socket6;  //!< IPv6 Socket
   std::map<Address, callbackData>
-      m_callbackData; //!< With this it is possible to access the
-                      //!< currentTxBytes, the packetSizeToReturn and the send
-                      //!< boolean through the from value of the client.
-  std::vector<Address> m_connectedClients; //!< Vector which holds the list of
-                                           //!< currently connected clients.
+      m_callbackData;  //!< With this it is possible to access the
+                       //!< currentTxBytes, the packetSizeToReturn and the send
+                       //!< boolean through the from value of the client.
+  std::vector<Address> m_connectedClients;  //!< Vector which holds the list of
+                                            //!< currently connected clients.
 };
 
-} // namespace ns3
+}  // namespace ns3
 
 #endif /* TCP_STREAM_SERVER_H */

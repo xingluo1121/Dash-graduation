@@ -12,13 +12,12 @@ UserPredictionAlgorithm::UserPredictionAlgorithm(
   NS_LOG_INFO(this);
 }
 
-userinfoAlgoReply
-UserPredictionAlgorithm::UserinfoAlgo(const int64_t segmentCounter,
-                                      const int64_t clientId) {
+userinfoAlgoReply UserPredictionAlgorithm::UserinfoAlgo(
+    const int64_t segmentCounter, const int64_t clientId) {
   userinfoAlgoReply answer;
   const int64_t timeNow = Simulator::Now().GetMicroSeconds();
   answer.decisionTime = timeNow;
   return answer;
 }
 
-} // namespace ns3
+}  // namespace ns3

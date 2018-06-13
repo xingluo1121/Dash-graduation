@@ -58,16 +58,16 @@ struct userinfoAlgoReply {
  */
 struct throughputData {
   std::vector<int64_t>
-      transmissionRequested; //!< Simulation time in microseconds when a
-                             //!< segment was requested by the client
+      transmissionRequested;  //!< Simulation time in microseconds when a
+                              //!< segment was requested by the client
   std::vector<int64_t>
-      transmissionStart; //!< Simulation time in microseconds when the first
-                         //!< packet of a segment was received
+      transmissionStart;  //!< Simulation time in microseconds when the first
+                          //!< packet of a segment was received
   std::vector<int64_t>
-      transmissionEnd; //!< Simulation time in microseconds when the last
-                       //!< packet of a segment was received
+      transmissionEnd;  //!< Simulation time in microseconds when the last
+                        //!< packet of a segment was received
   std::vector<int64_t>
-      bytesReceived; //!< Number of bytes received, i.e. segment size
+      bytesReceived;  //!< Number of bytes received, i.e. segment size
 };
 
 /*! \class bufferData tcp-stream-interface.h "model/tcp-stream-interface.h"
@@ -78,17 +78,17 @@ struct throughputData {
  * buffer level.
  */
 struct bufferData {
-  std::vector<int64_t> timeNow;      //!< current simulation time
-  std::vector<int64_t> segmentIndex; //!< segmentIndex of segment in
-                                     //!< buffer(base layer) -1 = fail
+  std::vector<int64_t> timeNow;       //!< current simulation time
+  std::vector<int64_t> segmentIndex;  //!< segmentIndex of segment in
+                                      //!< buffer(base layer) -1 = fail
   std::vector<int64_t>
-      bufferLevelOld; //!< buffer level in microseconds before adding segment
-                      //!< duration (in microseconds) of just downloaded
-                      //!< segment
+      bufferLevelOld;  //!< buffer level in microseconds before adding segment
+                       //!< duration (in microseconds) of just downloaded
+                       //!< segment
   std::vector<int64_t>
-      bufferLevelNew; //!< buffer level in microseconds after adding segment
-                      //!< duration (in microseconds) of just downloaded
-                      //!< segment
+      bufferLevelNew;  //!< buffer level in microseconds after adding segment
+                       //!< duration (in microseconds) of just downloaded
+                       //!< segment
 };
 
 /*! \class videoData tcp-stream-interface.h "model/tcp-stream-interface.h"
@@ -102,17 +102,17 @@ struct bufferData {
  */
 struct videoData {
   std::vector<std::vector<std::vector<int64_t>>>
-      segmentSize; //!< vector holding representation levels in the first
-                   //!< dimension and their particular segment sizes in bytes
-                   //!< in the second dimension
-                   // 2-D vector, < viewPoint < RepsLevel <segmentsize>>
+      segmentSize;  //!< vector holding representation levels in the first
+                    //!< dimension and their particular segment sizes in bytes
+                    //!< in the second dimension
+                    // 2-D vector, < viewPoint < RepsLevel <segmentsize>>
   std::vector<std::vector<double>>
-      averageBitrate;      //!< holding the average bitrate of a segment in
-                           //!< representation i in bits
-                           // 2-D vector, < viewPoint < RepsLevel's Bitrate >
-  int64_t segmentDuration; //!< duration of a segment in microseconds
-  std::vector<int64_t> repIndex; // repIndex
-  std::vector<int64_t> userInfo; // userViewPoint
+      averageBitrate;       //!< holding the average bitrate of a segment in
+                            //!< representation i in bits
+                            // 2-D vector, < viewPoint < RepsLevel's Bitrate >
+  int64_t segmentDuration;  //!< duration of a segment in microseconds
+  std::vector<int64_t> repIndex;  // repIndex
+  std::vector<int64_t> userInfo;  // userViewPoint
 };
 
 /*! \class playbackData tcp-stream-interface.h "model/tcp-stream-interface.h"
@@ -126,11 +126,11 @@ struct videoData {
  * streaming process) of the segment in microseconds in simulation time.
  */
 struct playbackData {
-  std::vector<int64_t> playbackIndex; //!< Index of the video segment
-  std::vector<int64_t> playbackStart; //!< Point in time in microseconds when
-                                      //!< playback of this segment started
+  std::vector<int64_t> playbackIndex;  //!< Index of the video segment
+  std::vector<int64_t> playbackStart;  //!< Point in time in microseconds when
+                                       //!< playback of this segment started
 };
 
-} // namespace ns3
+}  // namespace ns3
 
 #endif /* TCP_STREAM_CLIENT_H */
