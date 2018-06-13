@@ -27,7 +27,9 @@ AdaptationAlgorithm::AdaptationAlgorithm(const videoData &videoData,
                                          const playbackData &playbackData,
                                          const bufferData &bufferData,
                                          const throughputData &throughput)
-    : m_videoData(videoData), m_bufferData(bufferData),
-      m_throughput(throughput), m_playbackData(playbackData) {}
+    : m_videoData(videoData),
+      m_bufferData(bufferData),
+      m_throughput(throughput),
+      m_playbackData(playbackData) {}
 
-} // namespace ns3
+}  // namespace ns3
